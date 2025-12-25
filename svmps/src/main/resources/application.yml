@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/spvms_db
+    username: spvms_db
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+
+  # Temporarily disable Flyway automatic migration to avoid startup failure
+  # (Flyway reported "Unsupported Database: MySQL 8.0" on this environment).
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
