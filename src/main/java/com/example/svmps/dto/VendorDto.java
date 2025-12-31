@@ -1,5 +1,7 @@
 package com.example.svmps.dto;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,22 +12,22 @@ public class VendorDto {
 
     private Long id;
 
+    // Vendor Name
     @NotBlank(message = "Vendor name is required")
-    @Size(min = 3, max = 100, message = "Vendor name must be between 3 to 100 characters")
+    @Size(min = 3, max = 100, message = "Vendor name must be between 3 and 100 characters")
     private String name;
 
+    // Contact Person Name
     @NotBlank(message = "Contact name is required")
-    @Size(min =3, max = 100, message = "Contact name can be b/w 3 to 100 characters")
+    @Size(min = 3, max = 100, message = "Contact name must be between 3 and 100 characters")
     private String contactName;
 
+    // Email Validation
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
-    /*  Phone number validation
-       - Exactly 10 digits
-       - Indian format (no letters/special chars)
-    */
+    // Phone Number (Indian format)
     @NotBlank(message = "Phone number is required")
     @Pattern(
         regexp = "^[6-9]\\d{9}$",
@@ -33,29 +35,46 @@ public class VendorDto {
     )
     private String phone;
 
-    /*  Address validation
-       - Minimum 3 characters
-       - Prevents empty/short address
-    */
+    // Address
     @NotBlank(message = "Address is required")
-    @Size(min = 3, max = 255, message = "Address must be between 3 and 255 characters")
+    @Size(min = 5, max = 255, message = "Address must be between 5 and 255 characters")
     private String address;
 
-    /*  GST Number validation (India)
-       Format: 15 characters
-       Example: 29ABCDE1234F1Z5
-    */
+    // GST Number (India – simplified format)
+    // Example: 29ABCDE1234F1Z5
     @NotBlank(message = "GST number is required")
     @Pattern(
-        regexp = "^[0-9]{2}[A-Z]{5}[0-9]{2}$",
+        regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$",
         message = "Invalid GST number format"
     )
     private String gstNumber;
 
+    // Active Status
     @NotNull(message = "Active status is required")
     private Boolean isActive;
 
-    // getters & setters
+    // Rating (1.0 – 5.0)
+    @NotNull(message = "Rating is required")
+    @DecimalMin(value = "1.0", message = "Rating must be at least 1.0")
+    @DecimalMax(value = "5.0", message = "Rating must be at most 5.0")
+    private Double rating;
+
+    // Location (City / State)
+    @NotBlank(message = "Location is required")
+    @Size(min = 2, max = 100, message = "Location must be between 2 and 100 characters")
+    private String location;
+
+    // Category (IT, Hardware, Logistics)
+    @NotBlank(message = "Category is required")
+    @Size(min = 2, max = 50, message = "Category must be between 2 and 50 characters")
+    private String category;
+
+    // Compliance Status
+    @NotNull(message = "Compliance status is required")
+    private Boolean compliant;
+
+    // GETTERS & SETTERS
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -79,4 +98,16 @@ public class VendorDto {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public Boolean getCompliant() { return compliant; }
+    public void setCompliant(Boolean compliant) { this.compliant = compliant; }
 }

@@ -2,6 +2,8 @@ package com.example.svmps.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.svmps.dto.VendorDto;
@@ -23,28 +26,58 @@ import jakarta.validation.Valid;
 public class VendorController {
 
     private final VendorService vendorService;
-    public VendorController(VendorService vendorService) { this.vendorService = vendorService; }
 
+    public VendorController(VendorService vendorService) {
+        this.vendorService = vendorService;
+    }
+
+    // CREATE VENDOR
     @PostMapping
-    public ResponseEntity<VendorDto> createVendor(@Valid @RequestBody VendorDto dto) {
+    public ResponseEntity<VendorDto> createVendor(
+            @Valid @RequestBody VendorDto dto) {
+
         VendorDto created = vendorService.createVendor(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // GET ALL VENDORS
     @GetMapping
-    public List<VendorDto> getAllVendors() { return vendorService.getAllVendors(); }
+    public List<VendorDto> getAllVendors() {
+        return vendorService.getAllVendors();
+    }
 
+    // GET VENDOR BY ID
     @GetMapping("/{id}")
-    public VendorDto getVendorById(@PathVariable Long id) { return vendorService.getVendorById(id); }
+    public VendorDto getVendorById(@PathVariable Long id) {
+        return vendorService.getVendorById(id);
+    }
 
+    // UPDATE VENDOR
     @PutMapping("/{id}")
-    public VendorDto updateVendor(@PathVariable Long id, @Valid @RequestBody VendorDto dto) {
+    public VendorDto updateVendor(
+            @PathVariable Long id,
+            @Valid @RequestBody VendorDto dto) {
+
         return vendorService.updateVendor(id, dto);
     }
 
+    // DELETE (SOFT DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteVendor(@PathVariable Long id) {
         vendorService.deleteVendor(id);
         return ResponseEntity.noContent().build();
+    }
+
+    //  SEARCH VENDORS 
+    @GetMapping("/search")
+    public Page<VendorDto> searchVendors(
+            @RequestParam(required = false) Double rating,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean compliant,
+            Pageable pageable) {
+
+        return vendorService.searchVendors(
+                rating, location, category, compliant, pageable);
     }
 }

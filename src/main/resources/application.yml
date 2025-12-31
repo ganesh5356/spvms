@@ -13,5 +13,9 @@ spring:
       hibernate.format_sql: true
       hibernate.dialect: org.hibernate.dialect.MySQLDialect
 
+  springdoc.api-docs.path: /api-docs
+  springdoc.swagger-ui.path: /swagger-ui.html
+  spring.show-actuator: true
+
 server:
   port: 8080
