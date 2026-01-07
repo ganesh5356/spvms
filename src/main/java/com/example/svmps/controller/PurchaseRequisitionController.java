@@ -27,12 +27,15 @@ public class PurchaseRequisitionController {
     public PurchaseRequisitionController(
             PurchaseRequisitionService prService,
             ApprovalHistoryRepository historyRepository) {
+
         this.prService = prService;
         this.historyRepository = historyRepository;
     }
 
     @PostMapping
-    public PurchaseRequisitionDto createPr(@Valid @RequestBody PurchaseRequisitionDto dto) {
+    public PurchaseRequisitionDto createPr(
+            @Valid @RequestBody PurchaseRequisitionDto dto) {
+
         return prService.createPr(dto);
     }
 
@@ -46,6 +49,7 @@ public class PurchaseRequisitionController {
             @PathVariable Long id,
             @RequestParam String comments,
             @RequestParam Long approverId) {
+
         return prService.approvePr(id, comments, approverId);
     }
 
@@ -54,11 +58,27 @@ public class PurchaseRequisitionController {
             @PathVariable Long id,
             @RequestParam String comments,
             @RequestParam Long approverId) {
+
         return prService.rejectPr(id, comments, approverId);
     }
 
     @GetMapping("/{id}/history")
     public List<ApprovalHistory> history(@PathVariable Long id) {
         return historyRepository.findByPrId(id);
+    }
+
+    @GetMapping("/approval-history/all")
+    public List<ApprovalHistory> getAllApprovalHistory() {
+        return historyRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public PurchaseRequisitionDto fetchPrById(@PathVariable Long id) {
+        return prService.getPrById(id);
+    }
+
+    @GetMapping
+    public List<PurchaseRequisitionDto> fetchAllPrs() {
+        return prService.getAllPrs();
     }
 }
