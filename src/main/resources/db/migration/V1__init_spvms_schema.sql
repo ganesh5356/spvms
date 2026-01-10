@@ -50,17 +50,3 @@ CREATE TABLE IF NOT EXISTS purchase_requisitions (
   FOREIGN KEY (requester_id) REFERENCES users(id),
   FOREIGN KEY (vendor_id) REFERENCES vendors(id)
 );
-
--- purchase_orders
-CREATE TABLE IF NOT EXISTS purchase_orders (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  po_number VARCHAR(50) NOT NULL UNIQUE,
-  pr_id BIGINT NOT NULL,
-  vendor_id BIGINT NOT NULL,
-  status VARCHAR(30) NOT NULL,
-  total_amount DECIMAL(15,2),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (pr_id) REFERENCES purchase_requisitions(id),
-  FOREIGN KEY (vendor_id) REFERENCES vendors(id)
-);

@@ -1,85 +1,164 @@
 package com.example.svmps.service;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.example.svmps.dto.PurchaseOrderDto;
 import com.example.svmps.entity.PurchaseOrder;
 import com.example.svmps.entity.PurchaseRequisition;
-import com.example.svmps.entity.Vendor;
 import com.example.svmps.repository.PurchaseOrderRepository;
 import com.example.svmps.repository.PurchaseRequisitionRepository;
-import com.example.svmps.repository.VendorRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class PurchaseOrderService {
 
-    private final PurchaseOrderRepository poRepository;
-    private final PurchaseRequisitionRepository prRepository;
-    private final VendorRepository vendorRepository;
+    private final PurchaseOrderRepository poRepo;
+    private final PurchaseRequisitionRepository prRepo;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PurchaseOrderService(PurchaseOrderRepository poRepository,
-                                PurchaseRequisitionRepository prRepository,
-                                VendorRepository vendorRepository) {
-        this.poRepository = poRepository;
-        this.prRepository = prRepository;
-        this.vendorRepository = vendorRepository;
+    public PurchaseOrderService(PurchaseOrderRepository poRepo,
+                                PurchaseRequisitionRepository prRepo) {
+        this.poRepo = poRepo;
+        this.prRepo = prRepo;
     }
 
-    public PurchaseOrderDto createPoFromPr(Long prId, PurchaseOrderDto dto) {
-        PurchaseRequisition pr = prRepository.findById(prId).orElseThrow(() -> new RuntimeException("PR not found: " + prId));
+    // ================= CREATE PO FROM APPROVED PR =================
+    public PurchaseOrderDto createPo(Long prId, BigDecimal gstPercent) {
+
+        PurchaseRequisition pr = prRepo.findById(prId)
+                .orElseThrow(() -> new RuntimeException("PR not found"));
+
         if (!"APPROVED".equals(pr.getStatus())) {
-            throw new RuntimeException("PR must be APPROVED to create PO.");
+            throw new RuntimeException("PR is not APPROVED");
         }
 
         PurchaseOrder po = new PurchaseOrder();
-        po.setPoNumber(dto.getPoNumber());
-        po.setPr(pr);
+        po.setPoNumber("PO-" + System.currentTimeMillis());
+        po.setPrId(prId);
+        po.setBaseAmount(pr.getTotalAmount());
+        po.setItemsJson(pr.getItemsJson());
+        po.setQuantityJson(pr.getQuantityJson());
 
-        Vendor vendor = null;
-        if (dto.getVendorId() != null) {
-            vendor = vendorRepository.findById(dto.getVendorId())
-                    .orElseThrow(() -> new RuntimeException("Vendor not found: " + dto.getVendorId()));
-        } else if (pr.getVendor() != null) {
-            vendor = pr.getVendor();
-        } else {
-            throw new RuntimeException("Vendor must be specified either in PR or PO payload.");
+        int totalQty = extractTotalQuantity(pr.getQuantityJson());
+        po.setTotalQuantity(totalQty);
+
+        po.setGstPercent(gstPercent);
+
+        BigDecimal gstAmount = pr.getTotalAmount()
+                .multiply(gstPercent)
+                .divide(BigDecimal.valueOf(100));
+
+        po.setGstAmount(gstAmount);
+        po.setTotalAmount(pr.getTotalAmount().add(gstAmount));
+
+        return toDto(poRepo.save(po));
+    }
+
+    // ================= UPDATE DELIVERY =================
+    public PurchaseOrderDto updateDelivery(Long poId, Integer deliveredQty) {
+
+        PurchaseOrder po = poRepo.findById(poId)
+                .orElseThrow(() -> new RuntimeException("PO not found"));
+
+        int totalDelivered = po.getDeliveredQuantity() + deliveredQty;
+
+        if (totalDelivered > po.getTotalQuantity()) {
+            throw new RuntimeException("Delivered quantity exceeds ordered quantity");
         }
 
-        po.setVendor(vendor);
-        po.setTotalAmount(dto.getTotalAmount());
-        po.setStatus("DRAFT");
+        po.setDeliveredQuantity(totalDelivered);
 
-        PurchaseOrder saved = poRepository.save(po);
-        return toDto(saved);
+        if (totalDelivered == po.getTotalQuantity()) {
+            po.setStatus("DELIVERED");
+        } else {
+            po.setStatus("PARTIAL_DELIVERED");
+        }
+
+        return toDto(poRepo.save(po));
     }
 
-    public List<PurchaseOrderDto> getAllPos() {
-        return poRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    // ================= CLOSE PO =================
+    public PurchaseOrderDto closePo(Long poId) {
+
+        PurchaseOrder po = poRepo.findById(poId)
+                .orElseThrow(() -> new RuntimeException("PO not found"));
+
+        if (!"DELIVERED".equals(po.getStatus())) {
+            throw new RuntimeException("PO is not fully delivered");
+        }
+
+        po.setStatus("CLOSED");
+        return toDto(poRepo.save(po));
     }
 
-    public PurchaseOrderDto getPoById(Long id) {
-        PurchaseOrder po = poRepository.findById(id).orElseThrow(() -> new RuntimeException("PO not found: " + id));
-        return toDto(po);
+    // ================= HELPER: TOTAL QUANTITY =================
+    private int extractTotalQuantity(String quantityJson) {
+
+        if (quantityJson == null || quantityJson.isBlank()) {
+            return 0;
+        }
+
+        try {
+            // quantityJson example: [2,3,1]
+            List<Integer> quantities =
+                    objectMapper.readValue(quantityJson, List.class);
+
+            int total = 0;
+            for (Integer q : quantities) {
+                total += q;
+            }
+            return total;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid quantity JSON format");
+        }
     }
 
-    public PurchaseOrderDto updateStatus(Long id, String newStatus) {
-        PurchaseOrder po = poRepository.findById(id).orElseThrow(() -> new RuntimeException("PO not found: " + id));
-        po.setStatus(newStatus);
-        PurchaseOrder updated = poRepository.save(po);
-        return toDto(updated);
-    }
-
+    // ================= DTO MAPPER =================
     private PurchaseOrderDto toDto(PurchaseOrder po) {
+
         PurchaseOrderDto dto = new PurchaseOrderDto();
         dto.setId(po.getId());
         dto.setPoNumber(po.getPoNumber());
-        if (po.getPr() != null) dto.setPrId(po.getPr().getId());
-        if (po.getVendor() != null) dto.setVendorId(po.getVendor().getId());
+        dto.setPrId(po.getPrId());
         dto.setStatus(po.getStatus());
+        dto.setBaseAmount(po.getBaseAmount());
+        dto.setGstPercent(po.getGstPercent());
+        dto.setGstAmount(po.getGstAmount());
         dto.setTotalAmount(po.getTotalAmount());
+        dto.setTotalQuantity(po.getTotalQuantity());
+        dto.setDeliveredQuantity(po.getDeliveredQuantity());
         return dto;
     }
+    // ================= GET PO BY ID =================
+public PurchaseOrderDto getPoById(Long poId) {
+
+    PurchaseOrder po = poRepo.findById(poId)
+            .orElseThrow(() -> new RuntimeException("PO not found"));
+
+    return toDto(po);
+}
+
+// ================= GET ALL POs =================
+public List<PurchaseOrderDto> getAllPos() {
+
+    return poRepo.findAll()
+            .stream()
+            .map(this::toDto)
+            .toList();
+}
+
+// ================= GET PO BY PR ID =================
+public List<PurchaseOrderDto> getPosByPrId(Long prId) {
+
+    return poRepo.findAll()
+            .stream()
+            .filter(po -> po.getPrId().equals(prId))
+            .map(this::toDto)
+            .toList();
+}
+
 }

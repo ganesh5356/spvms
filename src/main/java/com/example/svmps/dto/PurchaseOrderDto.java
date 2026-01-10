@@ -2,37 +2,50 @@ package com.example.svmps.dto;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 public class PurchaseOrderDto {
 
     private Long id;
-
-    @NotBlank
-    private String poNumber;
-
-    @NotNull
     private Long prId;
-
-    @NotNull
-    private Long vendorId;
-
+    private String poNumber;
     private String status;
-    @NotNull
+
+    private BigDecimal baseAmount;
+    private BigDecimal gstPercent;
+    private BigDecimal gstAmount;
     private BigDecimal totalAmount;
 
-    // getters & setters
+    private Integer totalQuantity;
+    private Integer deliveredQuantity;
+
+    // ---------- GETTERS & SETTERS ----------
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getPoNumber() { return poNumber; }
-    public void setPoNumber(String poNumber) { this.poNumber = poNumber; }
+
     public Long getPrId() { return prId; }
     public void setPrId(Long prId) { this.prId = prId; }
-    public Long getVendorId() { return vendorId; }
-    public void setVendorId(Long vendorId) { this.vendorId = vendorId; }
+
+    public String getPoNumber() { return poNumber; }
+    public void setPoNumber(String poNumber) { this.poNumber = poNumber; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getBaseAmount() { return baseAmount; }
+    public void setBaseAmount(BigDecimal baseAmount) { this.baseAmount = baseAmount; }
+
+    public BigDecimal getGstPercent() { return gstPercent; }
+    public void setGstPercent(BigDecimal gstPercent) { this.gstPercent = gstPercent; }
+
+    public BigDecimal getGstAmount() { return gstAmount; }
+    public void setGstAmount(BigDecimal gstAmount) { this.gstAmount = gstAmount; }
+
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+
+    public Integer getTotalQuantity() { return totalQuantity; }
+    public void setTotalQuantity(Integer totalQuantity) { this.totalQuantity = totalQuantity; }
+
+    public Integer getDeliveredQuantity() { return deliveredQuantity; }
+    public void setDeliveredQuantity(Integer deliveredQuantity) { this.deliveredQuantity = deliveredQuantity; }
 }

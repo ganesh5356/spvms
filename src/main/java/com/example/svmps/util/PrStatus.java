@@ -7,6 +7,5 @@ public final class PrStatus {
     public static final String APPROVED = "APPROVED";
     public static final String REJECTED = "REJECTED";
 
-    private PrStatus() {
-    }
+    private PrStatus() {}
 }

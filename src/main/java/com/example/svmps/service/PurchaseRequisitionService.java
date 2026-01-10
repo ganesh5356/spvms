@@ -15,10 +15,14 @@ import com.example.svmps.repository.PurchaseOrderRepository;
 import com.example.svmps.repository.PurchaseRequisitionRepository;
 import com.example.svmps.repository.UserRepository;
 import com.example.svmps.repository.VendorRepository;
+import com.example.svmps.util.PrStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class PurchaseRequisitionService {
+
+    // max PR limit set to 500,000
+    private static final BigDecimal MAX_PR_LIMIT = new BigDecimal("500000");
 
     private final PurchaseRequisitionRepository prRepository;
     private final VendorRepository vendorRepository;
@@ -42,198 +46,193 @@ public class PurchaseRequisitionService {
         this.approvalHistoryRepository = approvalHistoryRepository;
     }
 
-    // ================= CREATE PR WITH AUTO CALC TOTAL =================
+    // ================= PR NUMBER =================
+    private String generatePrNumber() {
+        return "PR-" + System.currentTimeMillis();
+    }
 
+    // ================= CREATE PR =================
     public PurchaseRequisitionDto createPr(PurchaseRequisitionDto dto) {
-
-        if (prRepository.existsByPrNumber(dto.getPrNumber())) {
-            throw new RuntimeException("PR number already exists");
-        }
 
         if (!userRepository.existsById(dto.getRequesterId())) {
             throw new RuntimeException("Requester not found");
         }
 
-        if (dto.getItems().size() != dto.getQuantities().size() ||
-            dto.getItems().size() != dto.getItemAmounts().size()) {
+        validateItems(dto);
 
-            throw new RuntimeException("Items, quantities, amounts count must match");
-        }
-
-        BigDecimal total = BigDecimal.ZERO;
-
-        for (int i = 0; i < dto.getItems().size(); i++) {
-
-            BigDecimal price = dto.getItemAmounts().get(i);
-            Integer q = dto.getQuantities().get(i);
-
-            if (q <= 0) {
-                throw new RuntimeException("Quantity must be greater than 0");
-            }
-
-            total = total.add(price.multiply(BigDecimal.valueOf(q)));
-        }
-
-        PurchaseRequisition pr = new PurchaseRequisition();
-
-        pr.setPrNumber(dto.getPrNumber());
-        pr.setRequesterId(dto.getRequesterId());
-        pr.setStatus("DRAFT");
-        pr.setTotalAmount(total);
+        BigDecimal total = calculateTotal(dto);
+        validateBudget(total);
 
         Vendor vendor = vendorRepository.findById(dto.getVendorId())
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
+        PurchaseRequisition pr = new PurchaseRequisition();
+        pr.setPrNumber(generatePrNumber());
+        pr.setRequesterId(dto.getRequesterId());
         pr.setVendor(vendor);
+        pr.setStatus(PrStatus.DRAFT);
+        pr.setTotalAmount(total);
 
-        try {
-            pr.setItemsJson(mapper.writeValueAsString(dto.getItems()));
-            pr.setQuantityJson(mapper.writeValueAsString(dto.getQuantities()));
-            pr.setItemAmountJson(mapper.writeValueAsString(dto.getItemAmounts()));
-        } catch (Exception e) {
-            throw new RuntimeException("JSON convert error");
-        }
-
-        PurchaseRequisition saved = prRepository.save(pr);
-
-        return toDto(saved);
-    }
-
-    // ================= SUBMIT =================
-
-    public PurchaseRequisitionDto submitPr(Long id) {
-
-        PurchaseRequisition pr = prRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PR not found"));
-
-        if (!"DRAFT".equalsIgnoreCase(pr.getStatus())) {
-            throw new RuntimeException("Only draft can submit");
-        }
-
-        pr.setStatus("SUBMITTED");
+        saveJsonItems(pr, dto);
 
         return toDto(prRepository.save(pr));
     }
 
-    // ================= APPROVE =================
+    // ================= UPDATE PR =================
+    public PurchaseRequisitionDto updatePr(Long id, PurchaseRequisitionDto dto) {
 
+        PurchaseRequisition pr = getPr(id);
+
+        if (!PrStatus.DRAFT.equals(pr.getStatus())) {
+            throw new RuntimeException("Only DRAFT PR can be updated");
+        }
+
+        validateItems(dto);
+
+        BigDecimal total = calculateTotal(dto);
+        validateBudget(total);
+
+        pr.setTotalAmount(total);
+        saveJsonItems(pr, dto);
+
+        return toDto(prRepository.save(pr));
+    }
+
+    // ================= SUBMIT =================
+    public PurchaseRequisitionDto submitPr(Long id) {
+
+        PurchaseRequisition pr = getPr(id);
+
+        if (!PrStatus.DRAFT.equals(pr.getStatus())) {
+            throw new RuntimeException("Only DRAFT can submit");
+        }
+
+        pr.setStatus(PrStatus.SUBMITTED);
+        return toDto(prRepository.save(pr));
+    }
+
+    // ================= APPROVE =================
     public PurchaseRequisitionDto approvePr(
             Long id, String comments, Long approverId) {
 
-        PurchaseRequisition pr = prRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PR not found"));
+        PurchaseRequisition pr = getPr(id);
 
-        if (!"SUBMITTED".equalsIgnoreCase(pr.getStatus())) {
-            throw new RuntimeException("Only submitted can approve");
+        if (!PrStatus.SUBMITTED.equals(pr.getStatus())) {
+            throw new RuntimeException("Only SUBMITTED can approve");
         }
 
-        pr.setStatus("APPROVED");
+        pr.setStatus(PrStatus.APPROVED);
         prRepository.save(pr);
 
-        ApprovalHistory h = new ApprovalHistory();
-        h.setPrId(pr.getId());
-        h.setApproverId(approverId);
-        h.setAction("APPROVED");
-        h.setComments(comments);
-
-        approvalHistoryRepository.save(h);
-
-        createPoForApprovedPr(pr);
-
+        saveHistory(pr, approverId, "APPROVED", comments);
+        
         return toDto(pr);
     }
 
     // ================= REJECT =================
-
     public PurchaseRequisitionDto rejectPr(
             Long id, String comments, Long approverId) {
 
-        PurchaseRequisition pr = prRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PR not found"));
+        PurchaseRequisition pr = getPr(id);
 
-        if (!"SUBMITTED".equalsIgnoreCase(pr.getStatus())) {
-            throw new RuntimeException("Only submitted can reject");
+        if (!PrStatus.SUBMITTED.equals(pr.getStatus())) {
+            throw new RuntimeException("Only SUBMITTED can reject");
         }
 
-        pr.setStatus("REJECTED");
+        pr.setStatus(PrStatus.REJECTED);
         prRepository.save(pr);
 
-        ApprovalHistory h = new ApprovalHistory();
-        h.setPrId(pr.getId());
-        h.setApproverId(approverId);
-        h.setAction("REJECTED");
-        h.setComments(comments);
-
-        approvalHistoryRepository.save(h);
+        saveHistory(pr, approverId, "REJECTED", comments);
 
         return toDto(pr);
     }
 
     // ================= GET BY ID =================
-
     public PurchaseRequisitionDto getPrById(Long id) {
-
-        PurchaseRequisition pr = prRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PR not found"));
-
-        return toDto(pr);
+        return toDto(getPr(id));
     }
 
     // ================= GET ALL =================
-
     public List<PurchaseRequisitionDto> getAllPrs() {
         return prRepository.findAll()
-               .stream()
-               .map(this::toDto)
-               .toList();
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
-    // ================= CREATE PO =================
+    // ================= HELPERS =================
 
-    private void createPoForApprovedPr(PurchaseRequisition pr) {
-
-        PurchaseOrder po = new PurchaseOrder();
-
-        po.setPoNumber("PO-" + System.currentTimeMillis());
-        po.setPr(pr);
-        po.setVendor(pr.getVendor());
-        po.setTotalAmount(pr.getTotalAmount());
-        po.setStatus("DRAFT");
-
-        poRepository.save(po);
+    private PurchaseRequisition getPr(Long id) {
+        return prRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("PR not found"));
     }
 
-    // ================= CONVERTER =================
+    private void validateItems(PurchaseRequisitionDto dto) {
+        if (dto.getItems().size() != dto.getQuantities().size()
+                || dto.getItems().size() != dto.getItemAmounts().size()) {
+            throw new RuntimeException("Items, quantities and amounts must match");
+        }
+    }
 
+    private BigDecimal calculateTotal(PurchaseRequisitionDto dto) {
+        BigDecimal total = BigDecimal.ZERO;
+        for (int i = 0; i < dto.getItems().size(); i++) {
+            total = total.add(
+                    dto.getItemAmounts().get(i)
+                            .multiply(BigDecimal.valueOf(dto.getQuantities().get(i)))
+            );
+        }
+        return total;
+    }
+
+    private void validateBudget(BigDecimal total) {
+        if (total.compareTo(MAX_PR_LIMIT) > 0) {
+            throw new RuntimeException("PR exceeds budget limit");
+        }
+    }
+
+    private void saveJsonItems(PurchaseRequisition pr, PurchaseRequisitionDto dto) {
+        try {
+            pr.setItemsJson(mapper.writeValueAsString(dto.getItems()));
+            pr.setQuantityJson(mapper.writeValueAsString(dto.getQuantities()));
+            pr.setItemAmountJson(mapper.writeValueAsString(dto.getItemAmounts()));
+        } catch (Exception e) {
+            throw new RuntimeException("JSON conversion error");
+        }
+    }
+
+    private void saveHistory(
+            PurchaseRequisition pr,
+            Long approverId,
+            String action,
+            String comments) {
+
+        ApprovalHistory h = new ApprovalHistory();
+        h.setPrId(pr.getId());
+        h.setApproverId(approverId);
+        h.setAction(action);
+        h.setComments(comments);
+
+        approvalHistoryRepository.save(h);
+    }
+
+    
+
+    // ================= DTO CONVERTER =================
     private PurchaseRequisitionDto toDto(PurchaseRequisition pr) {
 
         PurchaseRequisitionDto dto = new PurchaseRequisitionDto();
-
         dto.setId(pr.getId());
         dto.setPrNumber(pr.getPrNumber());
         dto.setRequesterId(pr.getRequesterId());
-
-        if (pr.getVendor() != null) {
-            dto.setVendorId(pr.getVendor().getId());
-        }
-
-        dto.setStatus("DRAFT");
+        dto.setVendorId(pr.getVendor().getId());
+        dto.setStatus(pr.getStatus());
         dto.setTotalAmount(pr.getTotalAmount());
 
         try {
-
-            List<String> items =
-                mapper.readValue(pr.getItemsJson(), List.class);
-            dto.setItems(items);
-
-            List<Integer> q =
-                mapper.readValue(pr.getQuantityJson(), List.class);
-            dto.setQuantities(q);
-
-            List<BigDecimal> prices =
-                mapper.readValue(pr.getItemAmountJson(), List.class);
-            dto.setItemAmounts(prices);
-
+            dto.setItems(mapper.readValue(pr.getItemsJson(), List.class));
+            dto.setQuantities(mapper.readValue(pr.getQuantityJson(), List.class));
+            dto.setItemAmounts(mapper.readValue(pr.getItemAmountJson(), List.class));
         } catch (Exception e) {}
 
         return dto;

@@ -1,46 +1,66 @@
 package com.example.svmps.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.svmps.dto.PurchaseOrderDto;
 import com.example.svmps.service.PurchaseOrderService;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/po")
 public class PurchaseOrderController {
 
     private final PurchaseOrderService poService;
-    public PurchaseOrderController(PurchaseOrderService poService) { this.poService = poService; }
 
-    @PostMapping("/from-pr/{prId}")
-    public ResponseEntity<PurchaseOrderDto> createPoFromPr(@PathVariable Long prId, @Valid @RequestBody PurchaseOrderDto dto) {
-        PurchaseOrderDto created = poService.createPoFromPr(prId, dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public PurchaseOrderController(PurchaseOrderService poService) {
+        this.poService = poService;
     }
 
+    // ================= CREATE PO =================
+    @PostMapping("/create/{prId}")
+    public PurchaseOrderDto createPo(
+            @PathVariable Long prId,
+            @RequestParam BigDecimal gstPercent) {
+
+        return poService.createPo(prId, gstPercent);
+    }
+
+    // ================= DELIVER PO =================
+    @PostMapping("/{poId}/deliver")
+    public PurchaseOrderDto deliver(
+            @PathVariable Long poId,
+            @RequestParam Integer quantity) {
+
+        return poService.updateDelivery(poId, quantity);
+    }
+
+    // ================= CLOSE PO =================
+    @PostMapping("/{poId}/close")
+    public PurchaseOrderDto close(@PathVariable Long poId) {
+
+        return poService.closePo(poId);
+    }
+
+    // ================= GET PO BY ID =================
+    @GetMapping("/{poId}")
+    public PurchaseOrderDto getPoById(@PathVariable Long poId) {
+
+        return poService.getPoById(poId);
+    }
+
+    // ================= GET ALL POs =================
     @GetMapping
-    public List<PurchaseOrderDto> getAllPos() { return poService.getAllPos(); }
+    public List<PurchaseOrderDto> getAllPos() {
 
-    @GetMapping("/{id}")
-    public PurchaseOrderDto getPoById(@PathVariable Long id) { return poService.getPoById(id); }
+        return poService.getAllPos();
+    }
 
-    @PostMapping("/{id}/send")
-    public PurchaseOrderDto sendPo(@PathVariable Long id) { return poService.updateStatus(id, "SENT"); }
+    // ================= GET POs BY PR ID =================
+    @GetMapping("/by-pr/{prId}")
+    public List<PurchaseOrderDto> getPosByPrId(@PathVariable Long prId) {
 
-    @PostMapping("/{id}/receive")
-    public PurchaseOrderDto receivePo(@PathVariable Long id) { return poService.updateStatus(id, "RECEIVED"); }
-
-    @PostMapping("/{id}/close")
-    public PurchaseOrderDto closePo(@PathVariable Long id) { return poService.updateStatus(id, "CLOSED"); }
+        return poService.getPosByPrId(prId);
+    }
 }

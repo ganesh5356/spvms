@@ -4,40 +4,33 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class PurchaseRequisitionDto {
 
     private Long id;
+    private String prNumber; // AUTO-GENERATED
 
-    @NotBlank(message = "PR number is required")
-    private String prNumber;
-
-    @NotNull(message = "Requester id is required")
+    @NotNull
     private Long requesterId;
 
-    @NotNull(message = "Vendor id is required")
+    @NotNull
     private Long vendorId;
 
     private String status;
-
-    /* ---- CLIENT SHOULD NOT SEND TOTAL ---- */
     private BigDecimal totalAmount;
 
-    // Used only for approve/reject
     private String comments;
 
-    /* ============ NEW FIELDS ============ */
-
-    @NotNull(message = "Items are required")
+    @NotNull
     private List<String> items;
 
-    @NotNull(message = "Quantities are required")
+    @NotNull
     private List<@Min(1) Integer> quantities;
 
-    @NotNull(message = "Item amounts are required")
-    private List<@NotNull @Min(1) BigDecimal> itemAmounts;
+    @NotNull
+    private List<@Min(1) BigDecimal> itemAmounts;
+
 
     // ===== GETTERS & SETTERS =====
 
