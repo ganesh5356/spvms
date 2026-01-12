@@ -25,7 +25,7 @@ public class PurchaseOrderService {
         this.prRepo = prRepo;
     }
 
-    // ================= CREATE PO FROM APPROVED PR =================
+    // ================= CREATE PO =================
     public PurchaseOrderDto createPo(Long prId, BigDecimal gstPercent) {
 
         PurchaseRequisition pr = prRepo.findById(prId)
@@ -53,11 +53,13 @@ public class PurchaseOrderService {
 
         po.setGstAmount(gstAmount);
         po.setTotalAmount(pr.getTotalAmount().add(gstAmount));
+        po.setDeliveredQuantity(0);
+        po.setStatus("CREATED");
 
         return toDto(poRepo.save(po));
     }
 
-    // ================= UPDATE DELIVERY =================
+    // ================= DELIVERY =================
     public PurchaseOrderDto updateDelivery(Long poId, Integer deliveredQty) {
 
         PurchaseOrder po = poRepo.findById(poId)
@@ -94,6 +96,34 @@ public class PurchaseOrderService {
         return toDto(poRepo.save(po));
     }
 
+    // ================= GET PO BY ID =================
+    public PurchaseOrderDto getPoById(Long poId) {
+
+        PurchaseOrder po = poRepo.findById(poId)
+                .orElseThrow(() -> new RuntimeException("PO not found"));
+
+        return toDto(po);
+    }
+
+    // ================= GET ALL POs =================
+    public List<PurchaseOrderDto> getAllPos() {
+
+        return poRepo.findAll()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    // ================= GET POs BY PR ID =================
+    public List<PurchaseOrderDto> getPosByPrId(Long prId) {
+
+        return poRepo.findAll()
+                .stream()
+                .filter(po -> po.getPrId().equals(prId))
+                .map(this::toDto)
+                .toList();
+    }
+
     // ================= HELPER: TOTAL QUANTITY =================
     private int extractTotalQuantity(String quantityJson) {
 
@@ -102,7 +132,6 @@ public class PurchaseOrderService {
         }
 
         try {
-            // quantityJson example: [2,3,1]
             List<Integer> quantities =
                     objectMapper.readValue(quantityJson, List.class);
 
@@ -118,47 +147,41 @@ public class PurchaseOrderService {
     }
 
     // ================= DTO MAPPER =================
-    private PurchaseOrderDto toDto(PurchaseOrder po) {
+   private PurchaseOrderDto toDto(PurchaseOrder po) {
 
-        PurchaseOrderDto dto = new PurchaseOrderDto();
-        dto.setId(po.getId());
-        dto.setPoNumber(po.getPoNumber());
-        dto.setPrId(po.getPrId());
-        dto.setStatus(po.getStatus());
-        dto.setBaseAmount(po.getBaseAmount());
-        dto.setGstPercent(po.getGstPercent());
-        dto.setGstAmount(po.getGstAmount());
-        dto.setTotalAmount(po.getTotalAmount());
-        dto.setTotalQuantity(po.getTotalQuantity());
-        dto.setDeliveredQuantity(po.getDeliveredQuantity());
-        return dto;
+    PurchaseOrderDto dto = new PurchaseOrderDto();
+
+    // NULL SAFE VALUES
+    Integer totalQty = po.getTotalQuantity() != null ? po.getTotalQuantity() : 0;
+    Integer deliveredQty = po.getDeliveredQuantity() != null ? po.getDeliveredQuantity() : 0;
+
+    dto.setId(po.getId());
+    dto.setPoNumber(po.getPoNumber());
+    dto.setPrId(po.getPrId());
+    dto.setStatus(po.getStatus());
+    dto.setBaseAmount(po.getBaseAmount());
+    dto.setGstPercent(po.getGstPercent());
+    dto.setGstAmount(po.getGstAmount());
+    dto.setTotalAmount(po.getTotalAmount());
+    dto.setTotalQuantity(totalQty);
+    dto.setDeliveredQuantity(deliveredQty);
+
+    int remainingQty = totalQty - deliveredQty;
+    dto.setRemainingQuantity(remainingQty);
+
+    if (totalQty > 0 && po.getTotalAmount() != null) {
+        BigDecimal perUnitAmount =
+                po.getTotalAmount()
+                  .divide(BigDecimal.valueOf(totalQty), 2, BigDecimal.ROUND_HALF_UP);
+
+        dto.setBalanceAmount(
+                perUnitAmount.multiply(BigDecimal.valueOf(remainingQty))
+        );
+    } else {
+        dto.setBalanceAmount(BigDecimal.ZERO);
     }
-    // ================= GET PO BY ID =================
-public PurchaseOrderDto getPoById(Long poId) {
 
-    PurchaseOrder po = poRepo.findById(poId)
-            .orElseThrow(() -> new RuntimeException("PO not found"));
-
-    return toDto(po);
-}
-
-// ================= GET ALL POs =================
-public List<PurchaseOrderDto> getAllPos() {
-
-    return poRepo.findAll()
-            .stream()
-            .map(this::toDto)
-            .toList();
-}
-
-// ================= GET PO BY PR ID =================
-public List<PurchaseOrderDto> getPosByPrId(Long prId) {
-
-    return poRepo.findAll()
-            .stream()
-            .filter(po -> po.getPrId().equals(prId))
-            .map(this::toDto)
-            .toList();
+    return dto;
 }
 
 }
