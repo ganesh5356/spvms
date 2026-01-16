@@ -68,6 +68,13 @@ public class VendorController {
         return ResponseEntity.noContent().build();
     }
 
+    // HARD DELETE (PERMANENT)
+    @PostMapping("/{id}/hard-delete")
+    public ResponseEntity<Void> hardDeleteVendor(@PathVariable Long id) {
+        vendorService.hardDeleteVendor(id);
+        return ResponseEntity.noContent().build();
+    }
+
     //  SEARCH VENDORS 
     @GetMapping("/search")
     public Page<VendorDto> searchVendors(

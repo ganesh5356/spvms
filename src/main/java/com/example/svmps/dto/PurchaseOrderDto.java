@@ -10,8 +10,13 @@ public class PurchaseOrderDto {
     private String status;
 
     private BigDecimal baseAmount;
-    private BigDecimal gstPercent;
-    private BigDecimal gstAmount;
+    private BigDecimal cgstPercent;
+    private BigDecimal sgstPercent;
+    private BigDecimal igstPercent;
+    private BigDecimal cgstAmount;
+    private BigDecimal sgstAmount;
+    private BigDecimal igstAmount;
+    private BigDecimal totalGstAmount;
     private BigDecimal totalAmount;
 
     private Integer totalQuantity;
@@ -63,20 +68,60 @@ public class PurchaseOrderDto {
         this.baseAmount = baseAmount;
     }
 
-    public BigDecimal getGstPercent() {
-        return gstPercent;
+    public BigDecimal getCgstPercent() {
+        return cgstPercent;
     }
 
-    public void setGstPercent(BigDecimal gstPercent) {
-        this.gstPercent = gstPercent;
+    public void setCgstPercent(BigDecimal cgstPercent) {
+        this.cgstPercent = cgstPercent;
     }
 
-    public BigDecimal getGstAmount() {
-        return gstAmount;
+    public BigDecimal getSgstPercent() {
+        return sgstPercent;
     }
 
-    public void setGstAmount(BigDecimal gstAmount) {
-        this.gstAmount = gstAmount;
+    public void setSgstPercent(BigDecimal sgstPercent) {
+        this.sgstPercent = sgstPercent;
+    }
+
+    public BigDecimal getIgstPercent() {
+        return igstPercent;
+    }
+
+    public void setIgstPercent(BigDecimal igstPercent) {
+        this.igstPercent = igstPercent;
+    }
+
+    public BigDecimal getCgstAmount() {
+        return cgstAmount;
+    }
+
+    public void setCgstAmount(BigDecimal cgstAmount) {
+        this.cgstAmount = cgstAmount;
+    }
+
+    public BigDecimal getSgstAmount() {
+        return sgstAmount;
+    }
+
+    public void setSgstAmount(BigDecimal sgstAmount) {
+        this.sgstAmount = sgstAmount;
+    }
+
+    public BigDecimal getIgstAmount() {
+        return igstAmount;
+    }
+
+    public void setIgstAmount(BigDecimal igstAmount) {
+        this.igstAmount = igstAmount;
+    }
+
+    public BigDecimal getTotalGstAmount() {
+        return totalGstAmount;
+    }
+
+    public void setTotalGstAmount(BigDecimal totalGstAmount) {
+        this.totalGstAmount = totalGstAmount;
     }
 
     public BigDecimal getTotalAmount() {

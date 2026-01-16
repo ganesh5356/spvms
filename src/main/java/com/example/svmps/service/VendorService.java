@@ -8,16 +8,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.svmps.dto.VendorDto;
+import com.example.svmps.entity.PurchaseRequisition;
 import com.example.svmps.entity.Vendor;
+import com.example.svmps.repository.PurchaseRequisitionRepository;
 import com.example.svmps.repository.VendorRepository;
 
 @Service
 public class VendorService {
 
     private final VendorRepository vendorRepository;
+    private final PurchaseRequisitionRepository purchaseRequisitionRepository;
 
-    public VendorService(VendorRepository vendorRepository) {
+    public VendorService(VendorRepository vendorRepository, PurchaseRequisitionRepository purchaseRequisitionRepository) {
         this.vendorRepository = vendorRepository;
+        this.purchaseRequisitionRepository = purchaseRequisitionRepository;
     }
 
     // CREATE VENDOR
@@ -90,6 +94,21 @@ public class VendorService {
                 .orElseThrow(() -> new RuntimeException("Vendor not found with id: " + id));
         v.setIsActive(false);
         vendorRepository.save(v);
+    }
+
+    // HARD DELETE VENDOR (PERMANENT)
+    public void hardDeleteVendor(Long id) {
+        Vendor v = vendorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vendor not found with id: " + id));
+        
+        // Delete all purchase requisitions associated with this vendor
+        List<PurchaseRequisition> purchaseRequisitions = purchaseRequisitionRepository.findByVendorId(id);
+        if (!purchaseRequisitions.isEmpty()) {
+            purchaseRequisitionRepository.deleteAll(purchaseRequisitions);
+        }
+        
+        // Now delete the vendor
+        vendorRepository.delete(v);
     }
 
     // ENTITY → DTO MAPPER

@@ -8,12 +8,14 @@ export default function Login({ initialTab = 'login' }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const [rUsername, setRUsername] = useState('')
   const [rEmail, setREmail] = useState('')
   const [rPassword, setRPassword] = useState('')
   const [rRoles, setRRoles] = useState(['VENDOR'])
   const [rError, setRError] = useState('')
   const [rSuccess, setRSuccess] = useState('')
+  const [rFieldErrors, setRFieldErrors] = useState({})
   const { login } = useAuth()
   const nav = useNavigate()
   const client = createClient(() => null)
@@ -24,9 +26,33 @@ export default function Login({ initialTab = 'login' }) {
     nav(next === 'register' ? '/register' : '/login', { replace: true })
   }
 
+  function validateLogin() {
+    const errors = {}
+    if (!username.trim()) errors.username = 'Username is required'
+    if (!password.trim()) errors.password = 'Password is required'
+    return errors
+  }
+
+  function validateRegister() {
+    const errors = {}
+    if (!rUsername.trim()) errors.username = 'Username is required'
+    if (rUsername.length < 3) errors.username = 'Username must be at least 3 characters'
+    if (!rEmail.trim()) errors.email = 'Email is required'
+    if (!rEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.email = 'Invalid email format'
+    if (!rPassword.trim()) errors.password = 'Password is required'
+    if (rPassword.length < 6) errors.password = 'Password must be at least 6 characters'
+    return errors
+  }
+
   async function onSubmit(e) {
     e.preventDefault()
+    const errors = validateLogin()
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      return
+    }
     setError('')
+    setFieldErrors({})
     try {
       const res = await client.post('/auth/login', { username, password })
       login(res)
@@ -38,8 +64,14 @@ export default function Login({ initialTab = 'login' }) {
 
   async function onRegister(e) {
     e.preventDefault()
+    const errors = validateRegister()
+    if (Object.keys(errors).length > 0) {
+      setRFieldErrors(errors)
+      return
+    }
     setRError('')
     setRSuccess('')
+    setRFieldErrors({})
     try {
       await client.post('/auth/register', {
         username: rUsername,
@@ -80,11 +112,13 @@ export default function Login({ initialTab = 'login' }) {
             <form className="form-grid" onSubmit={onSubmit}>
               <label>
                 <span>Username</span>
-                <input value={username} onChange={e => setUsername(e.target.value)} required />
+                <input value={username} onChange={e => setUsername(e.target.value)} style={{borderColor: fieldErrors.username ? '#dc2626' : ''}} required />
+                {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
               </label>
               <label>
                 <span>Password</span>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{borderColor: fieldErrors.password ? '#dc2626' : ''}} required />
+                {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
               </label>
               <button type="submit" className="btn primary">Login</button>
               {error && <div className="error">{error}</div>}
@@ -95,15 +129,18 @@ export default function Login({ initialTab = 'login' }) {
             <form className="form-grid" onSubmit={onRegister}>
               <label>
                 <span>Username</span>
-                <input value={rUsername} onChange={e => setRUsername(e.target.value)} required />
+                <input value={rUsername} onChange={e => setRUsername(e.target.value)} style={{borderColor: rFieldErrors.username ? '#dc2626' : ''}} required />
+                {rFieldErrors.username && <span className="field-error">{rFieldErrors.username}</span>}
               </label>
               <label>
                 <span>Email</span>
-                <input type="email" value={rEmail} onChange={e => setREmail(e.target.value)} required />
+                <input type="email" value={rEmail} onChange={e => setREmail(e.target.value)} style={{borderColor: rFieldErrors.email ? '#dc2626' : ''}} required />
+                {rFieldErrors.email && <span className="field-error">{rFieldErrors.email}</span>}
               </label>
               <label>
                 <span>Password</span>
-                <input type="password" value={rPassword} onChange={e => setRPassword(e.target.value)} required />
+                <input type="password" value={rPassword} onChange={e => setRPassword(e.target.value)} style={{borderColor: rFieldErrors.password ? '#dc2626' : ''}} required />
+                {rFieldErrors.password && <span className="field-error">{rFieldErrors.password}</span>}
               </label>
               <div style={{ gridColumn: '1 / -1' }}>
                 <span style={{ display: 'block', color: '#98a2b3', fontSize: 12, marginBottom: 6 }}>Roles</span>
@@ -125,7 +162,7 @@ export default function Login({ initialTab = 'login' }) {
               </div>
               <button type="submit" className="btn primary">Create Account</button>
               {rError && <div className="error">{rError}</div>}
-              {rSuccess && <div className="muted-row">{rSuccess}</div>}
+              {rSuccess && <div className="success">{rSuccess}</div>}
             </form>
           )}
         </div>

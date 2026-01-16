@@ -26,7 +26,7 @@ public class PurchaseOrderService {
     }
 
     // ================= CREATE PO =================
-    public PurchaseOrderDto createPo(Long prId, BigDecimal gstPercent) {
+    public PurchaseOrderDto createPo(Long prId, BigDecimal cgstPercent, BigDecimal sgstPercent, BigDecimal igstPercent) {
 
         PurchaseRequisition pr = prRepo.findById(prId)
                 .orElseThrow(() -> new RuntimeException("PR not found"));
@@ -45,14 +45,33 @@ public class PurchaseOrderService {
         int totalQty = extractTotalQuantity(pr.getQuantityJson());
         po.setTotalQuantity(totalQty);
 
-        po.setGstPercent(gstPercent);
+        po.setCgstPercent(cgstPercent);
+        po.setSgstPercent(sgstPercent);
+        po.setIgstPercent(igstPercent);
 
-        BigDecimal gstAmount = pr.getTotalAmount()
-                .multiply(gstPercent)
-                .divide(BigDecimal.valueOf(100));
+        // Calculate individual GST amounts
+        BigDecimal cgstAmount = pr.getTotalAmount()
+                .multiply(cgstPercent)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
 
-        po.setGstAmount(gstAmount);
-        po.setTotalAmount(pr.getTotalAmount().add(gstAmount));
+        BigDecimal sgstAmount = pr.getTotalAmount()
+                .multiply(sgstPercent)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+
+        BigDecimal igstAmount = pr.getTotalAmount()
+                .multiply(igstPercent)
+                .divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+
+        po.setCgstAmount(cgstAmount);
+        po.setSgstAmount(sgstAmount);
+        po.setIgstAmount(igstAmount);
+
+        // Total GST = CGST + SGST + IGST
+        BigDecimal totalGstAmount = cgstAmount.add(sgstAmount).add(igstAmount);
+        po.setTotalGstAmount(totalGstAmount);
+
+        // Total Amount = Base Amount + Total GST
+        po.setTotalAmount(pr.getTotalAmount().add(totalGstAmount));
         po.setDeliveredQuantity(0);
         po.setStatus("CREATED");
 
@@ -160,8 +179,13 @@ public class PurchaseOrderService {
     dto.setPrId(po.getPrId());
     dto.setStatus(po.getStatus());
     dto.setBaseAmount(po.getBaseAmount());
-    dto.setGstPercent(po.getGstPercent());
-    dto.setGstAmount(po.getGstAmount());
+    dto.setCgstPercent(po.getCgstPercent());
+    dto.setSgstPercent(po.getSgstPercent());
+    dto.setIgstPercent(po.getIgstPercent());
+    dto.setCgstAmount(po.getCgstAmount());
+    dto.setSgstAmount(po.getSgstAmount());
+    dto.setIgstAmount(po.getIgstAmount());
+    dto.setTotalGstAmount(po.getTotalGstAmount());
     dto.setTotalAmount(po.getTotalAmount());
     dto.setTotalQuantity(totalQty);
     dto.setDeliveredQuantity(deliveredQty);

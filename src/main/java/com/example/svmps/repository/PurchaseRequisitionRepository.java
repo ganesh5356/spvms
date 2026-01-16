@@ -12,4 +12,6 @@ public interface PurchaseRequisitionRepository
     boolean existsByPrNumber(String prNumber);
 
     List<PurchaseRequisition> findByStatus(String status);
+
+    List<PurchaseRequisition> findByVendorId(Long vendorId);
 }

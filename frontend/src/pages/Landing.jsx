@@ -31,22 +31,45 @@ export default function Landing() {
         </div>
       </div>
 
+      <div className="landing-stats">
+        <div className="stat-card">
+          <div className="stat-number">360°</div>
+          <div className="stat-label">Full Procurement Coverage</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">3+</div>
+          <div className="stat-label">GST Types (CGST, SGST, IGST)</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">Real-time</div>
+          <div className="stat-label">Approval Tracking</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">Role-based</div>
+          <div className="stat-label">Access Control</div>
+        </div>
+      </div>
+
       <div className="landing-section">
         <h2>What you can do</h2>
         <div className="feature-grid">
           <div className="feature-card">
+            <div className="feature-icon">🏢</div>
             <h3>Vendor Management</h3>
             <p>Create vendors, update details, soft delete, and search by rating, location, category, and compliance.</p>
           </div>
           <div className="feature-card">
+            <div className="feature-icon">📋</div>
             <h3>Purchase Requisitions</h3>
             <p>Create PRs with items and quantities, submit for review, and view approval history for audit.</p>
           </div>
           <div className="feature-card">
+            <div className="feature-icon">📦</div>
             <h3>Purchase Orders</h3>
             <p>Create POs from approved PRs, apply GST, track delivered quantity, and close orders.</p>
           </div>
           <div className="feature-card">
+            <div className="feature-icon">👥</div>
             <h3>Users & Roles</h3>
             <p>Register users with roles and manage users (update or deactivate) from the admin view.</p>
           </div>

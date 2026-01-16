@@ -66,6 +66,10 @@ public class PurchaseRequisitionService {
         Vendor vendor = vendorRepository.findById(dto.getVendorId())
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
+        if (!vendor.getIsActive()) {
+            throw new RuntimeException("Vendor is inactive. We cannot create PR with an inactive vendor");
+        }
+
         PurchaseRequisition pr = new PurchaseRequisition();
         pr.setPrNumber(generatePrNumber());
         pr.setRequesterId(dto.getRequesterId());

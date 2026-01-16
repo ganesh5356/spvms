@@ -22,9 +22,11 @@ public class PurchaseOrderController {
     @PostMapping("/create/{prId}")
     public PurchaseOrderDto createPo(
             @PathVariable Long prId,
-            @RequestParam BigDecimal gstPercent) {
+            @RequestParam BigDecimal cgstPercent,
+            @RequestParam BigDecimal sgstPercent,
+            @RequestParam BigDecimal igstPercent) {
 
-        return poService.createPo(prId, gstPercent);
+        return poService.createPo(prId, cgstPercent, sgstPercent, igstPercent);
     }
 
     // ================= DELIVER PO =================

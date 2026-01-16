@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 
 @Entity
 @Table(name = "purchase_orders")
@@ -24,11 +27,32 @@ public class PurchaseOrder {
     @Column(name = "base_amount")
     private BigDecimal baseAmount;
 
-    @Column(name = "gst_percent")
-    private BigDecimal gstPercent;
+    @Column(name = "cgst_percent")
+    @NotNull(message = "CGST percentage is required")
+    @DecimalMin(value = "1.0", message = "CGST must be between 1 and 100")
+    @DecimalMax(value = "100.0", message = "CGST must be between 1 and 100")
+    private BigDecimal cgstPercent;
 
-    @Column(name = "gst_amount")
-    private BigDecimal gstAmount;
+    @Column(name = "sgst_percent")
+    @NotNull(message = "SGST percentage is required")
+    @DecimalMin(value = "1.0", message = "SGST must be between 1 and 100")
+    @DecimalMax(value = "100.0", message = "SGST must be between 1 and 100")
+    private BigDecimal sgstPercent;
+
+    @Column(name = "igst_percent")
+    private BigDecimal igstPercent;
+
+    @Column(name = "cgst_amount")
+    private BigDecimal cgstAmount;
+
+    @Column(name = "sgst_amount")
+    private BigDecimal sgstAmount;
+
+    @Column(name = "igst_amount")
+    private BigDecimal igstAmount;
+
+    @Column(name = "total_gst_amount")
+    private BigDecimal totalGstAmount;
 
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
@@ -78,11 +102,26 @@ public class PurchaseOrder {
     public BigDecimal getBaseAmount() { return baseAmount; }
     public void setBaseAmount(BigDecimal baseAmount) { this.baseAmount = baseAmount; }
 
-    public BigDecimal getGstPercent() { return gstPercent; }
-    public void setGstPercent(BigDecimal gstPercent) { this.gstPercent = gstPercent; }
+    public BigDecimal getCgstPercent() { return cgstPercent; }
+    public void setCgstPercent(BigDecimal cgstPercent) { this.cgstPercent = cgstPercent; }
 
-    public BigDecimal getGstAmount() { return gstAmount; }
-    public void setGstAmount(BigDecimal gstAmount) { this.gstAmount = gstAmount; }
+    public BigDecimal getSgstPercent() { return sgstPercent; }
+    public void setSgstPercent(BigDecimal sgstPercent) { this.sgstPercent = sgstPercent; }
+
+    public BigDecimal getIgstPercent() { return igstPercent; }
+    public void setIgstPercent(BigDecimal igstPercent) { this.igstPercent = igstPercent; }
+
+    public BigDecimal getCgstAmount() { return cgstAmount; }
+    public void setCgstAmount(BigDecimal cgstAmount) { this.cgstAmount = cgstAmount; }
+
+    public BigDecimal getSgstAmount() { return sgstAmount; }
+    public void setSgstAmount(BigDecimal sgstAmount) { this.sgstAmount = sgstAmount; }
+
+    public BigDecimal getIgstAmount() { return igstAmount; }
+    public void setIgstAmount(BigDecimal igstAmount) { this.igstAmount = igstAmount; }
+
+    public BigDecimal getTotalGstAmount() { return totalGstAmount; }
+    public void setTotalGstAmount(BigDecimal totalGstAmount) { this.totalGstAmount = totalGstAmount; }
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
