@@ -1,18 +1,52 @@
-import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
 import Login from './pages/Login.jsx'
-import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Landing from './pages/Landing.jsx'
+
+function LandingHeader() {
+  const { token, logout } = useAuth()
+  const nav = useNavigate()
+  return (
+    <header className="landing-header">
+      <div className="landing-header-inner">
+        <Link to="/" className="brand-link">
+          <div className="brand">
+            <span className="logo">SVPMS</span>
+            <span className="subtitle">Supplier & Procurement</span>
+          </div>
+        </Link>
+        <nav className="landing-nav">
+          {!token && (
+            <>
+              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/register" className="nav-link">Register</Link>
+              <Link to="/login" className="btn primary small">Get Started</Link>
+            </>
+          )}
+          {token && (
+            <>
+              <Link to="/app" className="btn outline small">Dashboard</Link>
+              <button className="btn outline small" onClick={() => { logout(); nav('/') }}>Logout</button>
+            </>
+          )}
+        </nav>
+      </div>
+    </header>
+  )
+}
 
 function Header() {
-  const { token, logout, roles } = useAuth()
+  const { token, logout } = useAuth()
   const nav = useNavigate()
   return (
     <header className="app-header">
-      <div className="brand">
-        <span className="logo">SVPMS</span>
-        <span className="subtitle">Supplier & Procurement</span>
-      </div>
+      <Link to="/" className="brand-link">
+        <div className="brand">
+          <span className="logo">SVPMS</span>
+          <span className="subtitle">Supplier & Procurement</span>
+        </div>
+      </Link>
       <nav className="header-nav">
         {!token && (
           <>
@@ -21,7 +55,10 @@ function Header() {
           </>
         )}
         {token && (
-          <button className="btn outline small" onClick={() => { logout(); nav('/login') }}>Logout</button>
+          <>
+            <Link to="/app" className="btn outline small">Dashboard</Link>
+            <button className="btn outline small" onClick={() => { logout(); nav('/') }}>Logout</button>
+          </>
         )}
       </nav>
     </header>
@@ -35,15 +72,18 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
+  const location = useLocation()
+  const isLanding = location.pathname === '/'
   return (
     <AuthProvider>
       <div className="app">
-        <Header />
+        {isLanding ? <LandingHeader /> : <Header />}
         <main className="app-main">
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/register" element={<Login initialTab="register" />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
