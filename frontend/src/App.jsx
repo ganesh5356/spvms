@@ -3,10 +3,12 @@ import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Landing from './pages/Landing.jsx'
+import DownloadReports from './pages/DownloadReports.jsx'
 
 function LandingHeader() {
   const { token, logout } = useAuth()
   const nav = useNavigate()
+
   return (
     <header className="landing-header">
       <div className="landing-header-inner">
@@ -16,6 +18,7 @@ function LandingHeader() {
             <span className="subtitle">Supplier & Procurement</span>
           </div>
         </Link>
+
         <nav className="landing-nav">
           {!token && (
             <>
@@ -27,7 +30,9 @@ function LandingHeader() {
           {token && (
             <>
               <Link to="/app" className="btn outline small">Dashboard</Link>
-              <button className="btn outline small" onClick={() => { logout(); nav('/') }}>Logout</button>
+              <button className="btn outline small" onClick={() => { logout(); nav('/') }}>
+                Logout
+              </button>
             </>
           )}
         </nav>
@@ -39,6 +44,7 @@ function LandingHeader() {
 function Header() {
   const { token, logout } = useAuth()
   const nav = useNavigate()
+
   return (
     <header className="app-header">
       <Link to="/" className="brand-link">
@@ -47,6 +53,7 @@ function Header() {
           <span className="subtitle">Supplier & Procurement</span>
         </div>
       </Link>
+
       <nav className="header-nav">
         {!token && (
           <>
@@ -57,7 +64,9 @@ function Header() {
         {token && (
           <>
             <Link to="/app" className="btn outline small">Dashboard</Link>
-            <button className="btn outline small" onClick={() => { logout(); nav('/') }}>Logout</button>
+            <button className="btn outline small" onClick={() => { logout(); nav('/') }}>
+              Logout
+            </button>
           </>
         )}
       </nav>
@@ -74,16 +83,36 @@ function PrivateRoute({ children }) {
 export default function App() {
   const location = useLocation()
   const isLanding = location.pathname === '/'
+
   return (
     <AuthProvider>
       <div className="app">
         {isLanding ? <LandingHeader /> : <Header />}
+
         <main className="app-main">
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Login initialTab="register" />} />
-            <Route path="/" element={<Landing />} />
-            <Route path="/app" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+
+            <Route
+              path="/app"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/app/reports"
+              element={
+                <PrivateRoute>
+                  <DownloadReports />
+                </PrivateRoute>
+              }
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

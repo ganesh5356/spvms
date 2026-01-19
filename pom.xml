@@ -28,6 +28,21 @@
     <!-- ================= Dependencies ================= -->
     <dependencies>
 
+            <!-- JasperReports -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>6.21.0</version>
+        </dependency>
+
+        <!-- For Excel export -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>6.21.0</version>
+        </dependency>
+
+
         <!--  Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

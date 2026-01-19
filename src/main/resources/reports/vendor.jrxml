@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="VendorReport"
+              pageWidth="595" pageHeight="842"
+              columnWidth="555"
+              leftMargin="20" rightMargin="20"
+              topMargin="20" bottomMargin="20">
+
+    <!-- PARAMETERS -->
+    <parameter name="REPORT_TITLE" class="java.lang.String"/>
+    <parameter name="LOGO_PATH" class="java.lang.String"/>
+
+    <!-- FIELDS -->
+    <field name="id" class="java.lang.Long"/>
+    <field name="name" class="java.lang.String"/>
+    <field name="email" class="java.lang.String"/>
+    <field name="phone" class="java.lang.String"/>
+    <field name="rating" class="java.lang.Double"/>
+    <field name="location" class="java.lang.String"/>
+
+    <!-- HEADER -->
+    <pageHeader>
+        <band height="70">
+
+            <image>
+                <reportElement x="0" y="0" width="80" height="50"/>
+                <imageExpression><![CDATA[$P{LOGO_PATH}]]></imageExpression>
+            </image>
+
+            <textField>
+                <reportElement x="100" y="10" width="350" height="30"/>
+                <textElement textAlignment="Center">
+                    <font size="16" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{REPORT_TITLE}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="460" y="10" width="90" height="20"/>
+                <textElement textAlignment="Right">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </pageHeader>
+
+    <!-- COLUMN HEADER -->
+    <columnHeader>
+        <band height="20">
+            <staticText><reportElement x="0" y="0" width="40" height="20"/><text><![CDATA[ID]]></text></staticText>
+            <staticText><reportElement x="45" y="0" width="120" height="20"/><text><![CDATA[Name]]></text></staticText>
+            <staticText><reportElement x="170" y="0" width="130" height="20"/><text><![CDATA[Email]]></text></staticText>
+            <staticText><reportElement x="305" y="0" width="80" height="20"/><text><![CDATA[Phone]]></text></staticText>
+            <staticText><reportElement x="390" y="0" width="50" height="20"/><text><![CDATA[Rating]]></text></staticText>
+            <staticText><reportElement x="445" y="0" width="90" height="20"/><text><![CDATA[Location]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <!-- DETAIL -->
+    <detail>
+        <band height="20">
+            <textField><reportElement x="0" y="0" width="40" height="20"/><textFieldExpression><![CDATA[$F{id}]]></textFieldExpression></textField>
+            <textField><reportElement x="45" y="0" width="120" height="20"/><textFieldExpression><![CDATA[$F{name}]]></textFieldExpression></textField>
+            <textField><reportElement x="170" y="0" width="130" height="20"/><textFieldExpression><![CDATA[$F{email}]]></textFieldExpression></textField>
+            <textField><reportElement x="305" y="0" width="80" height="20"/><textFieldExpression><![CDATA[$F{phone}]]></textFieldExpression></textField>
+            <textField><reportElement x="390" y="0" width="50" height="20"/><textFieldExpression><![CDATA[$F{rating}]]></textFieldExpression></textField>
+            <textField><reportElement x="445" y="0" width="90" height="20"/><textFieldExpression><![CDATA[$F{location}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <!-- FOOTER -->
+    <pageFooter>
+        <band height="25">
+            <textField>
+                <reportElement x="200" y="5" width="200" height="15"/>
+                <textElement textAlignment="Center">
+                    <font size="9"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+</jasperReport>
