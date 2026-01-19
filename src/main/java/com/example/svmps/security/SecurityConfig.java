@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -13,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
+@EnableMethodSecurity   //  REQUIRED FOR @PreAuthorize
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -26,18 +28,18 @@ public class SecurityConfig {
             throws Exception {
 
         http
-            // ✅ ENABLE CORS (REQUIRED FOR FRONTEND DOWNLOAD)
+            // ENABLE CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            // ✅ DISABLE CSRF (JWT BASED)
+            //  DISABLE CSRF (JWT BASED)
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
 
-                // ✅ ALLOW PREFLIGHT REQUESTS
+                //  PREFLIGHT
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ PUBLIC ENDPOINTS
+                //  PUBLIC ENDPOINTS
                 .requestMatchers(
                         "/auth/**",
 
@@ -48,11 +50,11 @@ public class SecurityConfig {
                         "/api-docs/**"
                 ).permitAll()
 
-                // 🔐 EVERYTHING ELSE NEEDS JWT
+                //  EVERYTHING ELSE NEEDS JWT
                 .anyRequest().authenticated()
             )
 
-            // ✅ JWT FILTER
+            //  JWT FILTER
             .addFilterBefore(
                     jwtAuthFilter,
                     UsernamePasswordAuthenticationFilter.class
@@ -61,13 +63,12 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS CONFIGURATION (INLINE, NO EXTRA FILE)
+    // ✅ CORS CONFIGURATION
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // Frontend URL
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173"
         ));
@@ -81,7 +82,6 @@ public class SecurityConfig {
                 "Content-Type"
         ));
 
-        // Needed so browser can read file headers
         config.setExposedHeaders(List.of(
                 "Content-Disposition"
         ));
