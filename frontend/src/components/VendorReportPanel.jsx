@@ -9,69 +9,77 @@ export default function VendorReportPanel() {
   const { token } = useAuth();
 
   return (
-    <div>
+    <section className="report-panel">
       <h3>Vendor Reports</h3>
 
-      {/* ===== DOWNLOAD ALL ===== */}
-      <button
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/vendors?format=pdf`,
-            filename: "vendors.pdf",
-            token
-          })
-        }
-      >
-        Download All (PDF)
-      </button>
+      {/* DOWNLOAD ALL */}
+      <div className="report-actions">
+        <button
+          className="btn outline report-btn pdf-btn"
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/vendors?format=pdf`,
+              filename: "vendors.pdf",
+              token
+            })
+          }
+        >
+          Download All (PDF)
+        </button>
 
-      <button
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/vendors?format=xlsx`,
-            filename: "vendors.xlsx",
-            token
-          })
-        }
-      >
-        Download All (Excel)
-      </button>
+        <button
+          className="btn outline report-btn excel-btn"
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/vendors?format=xlsx`,
+              filename: "vendors.xlsx",
+              token
+            })
+          }
+        >
+          Download All (Excel)
+        </button>
+      </div>
 
-      <hr />
+      <div className="report-divider" />
 
-      {/* ===== DOWNLOAD BY ID ===== */}
-      <input
-        type="number"
-        placeholder="Vendor ID"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
-      />
+      {/* DOWNLOAD BY ID */}
+      <div className="report-id-section">
+        <input
+          type="number"
+          placeholder="Vendor ID"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+        />
 
-      <button
-        disabled={!id}
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/vendors/${id}?format=pdf`,
-            filename: `vendor_${id}.pdf`,
-            token
-          })
-        }
-      >
-        Download by ID (PDF)
-      </button>
+        <button
+          className="btn outline report-btn pdf-btn"
+          disabled={!id}
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/vendors/${id}?format=pdf`,
+              filename: `vendor_${id}.pdf`,
+              token
+            })
+          }
+        >
+          PDF
+        </button>
 
-      <button
-        disabled={!id}
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/vendors/${id}?format=xlsx`,
-            filename: `vendor_${id}.xlsx`,
-            token
-          })
-        }
-      >
-        Download by ID (Excel)
-      </button>
-    </div>
+        <button
+          className="btn outline report-btn excel-btn"
+          disabled={!id}
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/vendors/${id}?format=xlsx`,
+              filename: `vendor_${id}.xlsx`,
+              token
+            })
+          }
+        >
+          Excel
+        </button>
+      </div>
+    </section>
   );
 }

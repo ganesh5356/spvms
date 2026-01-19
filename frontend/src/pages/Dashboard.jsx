@@ -39,9 +39,9 @@ export default function Dashboard() {
           : 0
 
         setStats({
-          vendors: Array.isArray(vendorRes) ? vendorRes.length : 0,
-          prs: Array.isArray(prRes) ? prRes.length : 0,
-          pos: Array.isArray(poRes) ? poRes.length : 0,
+          vendors: vendorRes?.length || 0,
+          prs: prRes?.length || 0,
+          pos: poRes?.length || 0,
           posWithAllGst: posWithAllGstCount
         })
       } catch (err) {
@@ -53,90 +53,72 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <section className="view">
+    <section className="view dashboard">
 
-      {/* ===== DASHBOARD HEADER ACTION ===== */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 15 }}>
-        <button
-          className="btn primary"
-          onClick={() => navigate('/app/reports')}
-        >
-          Download Reports
-        </button>
-      </div>
+      
 
-      {/* ===== STATS ===== */}
-      <div className="dashboard-stats">
-        <div className="stat-card-dashboard" onClick={() => setTab('vendors')} style={{ cursor: 'pointer' }}>
-          <div className="stat-icon">🏢</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.vendors}</div>
-            <div className="stat-name">Vendors</div>
+      {/* ===== STATS SECTION ===== */}
+      <section className="dashboard-section">
+        <h3 className="section-title">Overview</h3>
+
+        <div className="dashboard-stats">
+          <StatCard label="Vendors" value={stats.vendors} icon="🏢" onClick={() => setTab('vendors')} />
+          <StatCard label="Requisitions" value={stats.prs} icon="📋" onClick={() => setTab('pr')} />
+          <StatCard label="Orders" value={stats.pos} icon="📦" onClick={() => { setTab('po'); setPoFilter('all') }} />
+          <StatCard label="POs with GST" value={stats.posWithAllGst} icon="⚙️" onClick={() => { setTab('po'); setPoFilter('gst') }} />
+        </div>
+      </section>
+
+      {/* ===== ACTIONS SECTION ===== */}
+      <section className="dashboard-section">
+        <h3 className="section-title">Actions</h3>
+
+        <div className="dashboard-stats">
+          <div
+            className="stat-card-dashboard action-card"
+            onClick={() => navigate('/app/reports')}
+          >
+            <div className="stat-icon">⬇️</div>
+            <div className="stat-content">
+              <div className="stat-name">Download Reports</div>
+              <div className="stat-subtitle">Vendors · PR · PO</div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="stat-card-dashboard" onClick={() => setTab('pr')} style={{ cursor: 'pointer' }}>
-          <div className="stat-icon">📋</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.prs}</div>
-            <div className="stat-name">Requisitions</div>
-          </div>
+      {/* ===== TABS SECTION ===== */}
+      <section className="dashboard-section">
+        <nav className="tabs">
+          <button className={`tab ${tab === 'vendors' ? 'active' : ''}`} onClick={() => setTab('vendors')}>Vendors</button>
+          <button className={`tab ${tab === 'pr' ? 'active' : ''}`} onClick={() => setTab('pr')}>Requisitions</button>
+          <button className={`tab ${tab === 'po' ? 'active' : ''}`} onClick={() => { setTab('po'); setPoFilter('all') }}>Orders</button>
+          {hasRole('ADMIN') && (
+            <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Users</button>
+          )}
+        </nav>
+
+        <div className="tab-panels">
+          {tab === 'vendors' && <VendorsPage />}
+          {tab === 'pr' && <PRPage />}
+          {tab === 'po' && <POPage filter={poFilter} onFilterChange={setPoFilter} />}
+          {tab === 'users' && hasRole('ADMIN') && <UsersPage />}
         </div>
-
-        <div
-          className="stat-card-dashboard"
-          onClick={() => { setTab('po'); setPoFilter('all') }}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className="stat-icon">📦</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pos}</div>
-            <div className="stat-name">Orders</div>
-          </div>
-        </div>
-
-        <div
-          className="stat-card-dashboard"
-          onClick={() => { setTab('po'); setPoFilter('gst') }}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className="stat-icon">⚙️</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.posWithAllGst}</div>
-            <div className="stat-name">POs with All GST</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ===== TABS ===== */}
-      <nav className="tabs">
-        <button className={`tab ${tab === 'vendors' ? 'active' : ''}`} onClick={() => setTab('vendors')}>
-          Vendors
-        </button>
-        <button className={`tab ${tab === 'pr' ? 'active' : ''}`} onClick={() => setTab('pr')}>
-          Requisitions
-        </button>
-        <button
-          className={`tab ${tab === 'po' ? 'active' : ''}`}
-          onClick={() => { setTab('po'); setPoFilter('all') }}
-        >
-          Orders
-        </button>
-        {hasRole('ADMIN') && (
-          <button className={`tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>
-            Users
-          </button>
-        )}
-      </nav>
-
-      {/* ===== TAB CONTENT ===== */}
-      <div className="tab-panels">
-        {tab === 'vendors' && <VendorsPage />}
-        {tab === 'pr' && <PRPage />}
-        {tab === 'po' && <POPage filter={poFilter} onFilterChange={setPoFilter} />}
-        {tab === 'users' && hasRole('ADMIN') && <UsersPage />}
-      </div>
+      </section>
 
     </section>
+  )
+}
+
+/* ===== SMALL REUSABLE CARD COMPONENT ===== */
+function StatCard({ label, value, icon, onClick }) {
+  return (
+    <div className="stat-card-dashboard" onClick={onClick}>
+      <div className="stat-icon">{icon}</div>
+      <div className="stat-content">
+        <div className="stat-value">{value}</div>
+        <div className="stat-name">{label}</div>
+      </div>
+    </div>
   )
 }

@@ -9,67 +9,75 @@ export default function POReportPanel() {
   const { token } = useAuth();
 
   return (
-    <div>
+    <section className="report-panel">
       <h3>Purchase Order Reports</h3>
 
-      <button
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/po?format=pdf`,
-            filename: "pos.pdf",
-            token
-          })
-        }
-      >
-        Download All (PDF)
-      </button>
+      <div className="report-actions">
+        <button
+          className="btn outline report-btn pdf-btn"
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/po?format=pdf`,
+              filename: "pos.pdf",
+              token
+            })
+          }
+        >
+          Download All (PDF)
+        </button>
 
-      <button
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/po?format=xlsx`,
-            filename: "pos.xlsx",
-            token
-          })
-        }
-      >
-        Download All (Excel)
-      </button>
+        <button
+          className="btn outline report-btn excel-btn"
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/po?format=xlsx`,
+              filename: "pos.xlsx",
+              token
+            })
+          }
+        >
+          Download All (Excel)
+        </button>
+      </div>
 
-      <hr />
+      <div className="report-divider" />
 
-      <input
-        type="number"
-        placeholder="PO ID"
-        value={id}
-        onChange={(e) => setId(e.target.value)}
-      />
+      <div className="report-id-section">
+        <input
+          type="number"
+          placeholder="PO ID"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+        />
 
-      <button
-        disabled={!id}
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/po/${id}?format=pdf`,
-            filename: `po_${id}.pdf`,
-            token
-          })
-        }
-      >
-        Download by ID (PDF)
-      </button>
+        <button
+          className="btn outline report-btn pdf-btn"
+          disabled={!id}
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/po/${id}?format=pdf`,
+              filename: `po_${id}.pdf`,
+              token
+            })
+          }
+        >
+          PDF
+        </button>
 
-      <button
-        disabled={!id}
-        onClick={() =>
-          downloadWithAuth({
-            url: `${BASE_URL}/po/${id}?format=xlsx`,
-            filename: `po_${id}.xlsx`,
-            token
-          })
-        }
-      >
-        Download by ID (Excel)
-      </button>
-    </div>
+        <button
+          className="btn outline report-btn excel-btn"
+          disabled={!id}
+          onClick={() =>
+            downloadWithAuth({
+              url: `${BASE_URL}/po/${id}?format=xlsx`,
+              filename: `po_${id}.xlsx`,
+              token
+            })
+          }
+        >
+          Excel
+        </button>
+      </div>
+    </section>
   );
 }
