@@ -14,6 +14,8 @@
         <relativePath/>
     </parent>
 
+
+
     <!-- ================= Project Info ================= -->
     <groupId>com.example</groupId>
     <artifactId>svmps</artifactId>
@@ -41,6 +43,20 @@
             <artifactId>jasperreports-fonts</artifactId>
             <version>6.21.0</version>
         </dependency>
+
+        <!-- Mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
+
+
+
 
 
         <!--  Web -->

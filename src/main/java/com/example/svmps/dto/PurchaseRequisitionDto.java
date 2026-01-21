@@ -17,6 +17,12 @@ public class PurchaseRequisitionDto {
     @NotNull
     private Long vendorId;
 
+    private String requesterEmail;
+    public String getRequesterEmail() { return requesterEmail; }
+    public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
+
+
+
     private String status;
     private BigDecimal totalAmount;
 

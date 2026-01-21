@@ -6,10 +6,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/auth': 'http://localhost:8080',
-      '/api': 'http://localhost:8080',
-      '/swagger-ui': 'http://localhost:8080',
-      '/v3': 'http://localhost:8080'
+      '/auth': 'http://localhost:8082',
+      '/api': 'http://localhost:8082',
+      '/swagger-ui': 'http://localhost:8082',
+      '/v3': 'http://localhost:8082'
     }
   }
 })

@@ -9,8 +9,14 @@ export default function PRPage() {
   const client = createClient(() => token)
   const [prs, setPrs] = useState([])
   const [form, setForm] = useState({
-    requesterId: '', vendorId: '', items: ['Item'], quantities: [1], itemAmounts: [1]
+    requesterId: '',
+    requesterEmail: '',
+    vendorId: '',
+    items: ['Item'],
+    quantities: [1],
+    itemAmounts: [1]
   })
+
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
   const [approvalError, setApprovalError] = useState('')
@@ -18,8 +24,11 @@ export default function PRPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
 
+
   function validatePR(prForm) {
     const errors = {}
+    if (!prForm.requesterEmail) errors.requesterEmail = 'Requester email required'
+    if (prForm.requesterEmail && !prForm.requesterEmail.includes('@')) errors.requesterEmail = 'Valid email required'
     if (!prForm.requesterId) errors.requesterId = 'Requester ID is required'
     if (isNaN(Number(prForm.requesterId))) errors.requesterId = 'Requester ID must be a number'
     if (!prForm.vendorId) errors.vendorId = 'Vendor ID is required'
@@ -69,13 +78,15 @@ export default function PRPage() {
     try {
       const payload = {
         requesterId: Number(form.requesterId),
+        requesterEmail: form.requesterEmail,  // NEW
         vendorId: Number(form.vendorId),
         items: form.items,
         quantities: form.quantities.map(x=>Number(x)),
         itemAmounts: form.itemAmounts.map(x=>Number(x))
       }
       await client.post('/api/pr', payload)
-      setForm({ requesterId:'', vendorId:'', items:['Item'], quantities:[1], itemAmounts:[1] })
+      setForm({  requesterId: '',
+        requesterEmail:'', vendorId:'', items:['Item'], quantities:[1], itemAmounts:[1] })
       setShowCreate(false)
       await load()
     } catch (err) {
@@ -83,6 +94,8 @@ export default function PRPage() {
       setError(`❌ ${errorMsg}`)
     }
   }
+
+
 
   async function submit(id) {
     const pr = prs.find(p => p.id === id)
@@ -153,12 +166,12 @@ export default function PRPage() {
       <div className="table-wrap">
         <table className="table">
           <thead>
-            <tr><th>ID</th><th>Number</th><th>Status</th><th>Vendor</th><th>Total</th><th>Actions</th></tr>
+            <tr><th>ID</th><th>Requester Email</th><th>Number</th><th>Status</th><th>Vendor</th><th>Total</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {prs.map(pr => (
               <tr key={pr.id}>
-                <td>{pr.id}</td><td>{pr.prNumber}</td><td>{pr.status}</td><td>{pr.vendorId}</td><td>{pr.totalAmount}</td>
+                <td>{pr.id}</td><td>{pr.requesterEmail}</td><td>{pr.prNumber}</td><td>{pr.status}</td><td>{pr.vendorId}</td><td>{pr.totalAmount}</td>
                 <td>
                   <div style={{display:'flex', gap:'8px'}}>
                     <button className="btn small" onClick={() => submit(pr.id)}>Submit</button>
@@ -181,6 +194,17 @@ export default function PRPage() {
       }}>
         <form className="form-grid" onSubmit={createPr}>
           <label><span>Requester ID</span><input value={form.requesterId} onChange={e=>setForm({...form, requesterId:e.target.value})} style={{borderColor: fieldErrors.requesterId ? '#dc2626' : ''}} required />{fieldErrors.requesterId && <span className="field-error">{fieldErrors.requesterId}</span>}</label>
+          <label>
+            <span>Requester Email</span>
+            <input
+                type="email"
+                value={form.requesterEmail}
+                onChange={e=>setForm({...form, requesterEmail:e.target.value})}
+                style={{borderColor: fieldErrors.requesterEmail ? '#dc2626' : ''}}
+                required
+            />
+            {fieldErrors.requesterEmail && <span className="field-error">{fieldErrors.requesterEmail}</span>}
+          </label>
           <label><span>Vendor ID</span><input value={form.vendorId} onChange={e=>setForm({...form, vendorId:e.target.value})} style={{borderColor: fieldErrors.vendorId ? '#dc2626' : ''}} required />{fieldErrors.vendorId && <span className="field-error">{fieldErrors.vendorId}</span>}</label>
           <label><span>Item</span><input value={form.items[0]} onChange={e=>setForm({...form, items:[e.target.value]})} style={{borderColor: fieldErrors.items ? '#dc2626' : ''}} required />{fieldErrors.items && <span className="field-error">{fieldErrors.items}</span>}</label>
           <label><span>Quantity</span><input type="number" min="1" value={form.quantities[0]} onChange={e=>setForm({...form, quantities:[e.target.value]})} style={{borderColor: fieldErrors.quantities ? '#dc2626' : ''}} required />{fieldErrors.quantities && <span className="field-error">{fieldErrors.quantities}</span>}</label>

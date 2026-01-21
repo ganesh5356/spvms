@@ -9,6 +9,7 @@ import com.example.svmps.service.AuthService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,12 +22,15 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @PreAuthorize("permitAll()")
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(
             @Valid @RequestBody RegisterRequest request) {
 
         return ResponseEntity.ok(authService.register(request));
     }
+
+    @PreAuthorize("permitAll()")
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(

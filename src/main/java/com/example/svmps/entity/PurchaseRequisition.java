@@ -38,6 +38,10 @@ public class PurchaseRequisition {
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
 
+    @Column(name = "requester_email")
+    private String requesterEmail;
+
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -66,6 +70,15 @@ public class PurchaseRequisition {
             this.status = "DRAFT";
         }
     }
+
+
+
+
+    public String getRequesterEmail() { return requesterEmail; }
+    public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
+
+// Your existing code stays exactly same
+
 
     @PreUpdate
     protected void onUpdate() {

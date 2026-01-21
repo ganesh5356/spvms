@@ -3,13 +3,11 @@ package com.example.svmps.service;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.example.svmps.entity.*;
+import org.springframework.data.aot.PublicMethodReflectiveProcessor;
 import org.springframework.stereotype.Service;
 
 import com.example.svmps.dto.PurchaseRequisitionDto;
-import com.example.svmps.entity.ApprovalHistory;
-import com.example.svmps.entity.PurchaseOrder;
-import com.example.svmps.entity.PurchaseRequisition;
-import com.example.svmps.entity.Vendor;
 import com.example.svmps.repository.ApprovalHistoryRepository;
 import com.example.svmps.repository.PurchaseOrderRepository;
 import com.example.svmps.repository.PurchaseRequisitionRepository;
@@ -29,6 +27,9 @@ public class PurchaseRequisitionService {
     private final UserRepository userRepository;
     private final PurchaseOrderRepository poRepository;
     private final ApprovalHistoryRepository approvalHistoryRepository;
+    private final EmailService emailService;
+    private final EmailTemplateService templateService;
+
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -37,50 +38,47 @@ public class PurchaseRequisitionService {
             VendorRepository vendorRepository,
             UserRepository userRepository,
             PurchaseOrderRepository poRepository,
-            ApprovalHistoryRepository approvalHistoryRepository) {
+            ApprovalHistoryRepository approvalHistoryRepository,
+            EmailService emailService,
+            EmailTemplateService templateService) {
 
         this.prRepository = prRepository;
         this.vendorRepository = vendorRepository;
         this.userRepository = userRepository;
         this.poRepository = poRepository;
         this.approvalHistoryRepository = approvalHistoryRepository;
+        this.emailService = emailService;
+        this.templateService = templateService;
     }
+
+    public PurchaseRequisition submitPR(PurchaseRequisition pr) {
+
+        pr.setStatus("SUBMITTED");
+        PurchaseRequisition savedPr = prRepository.save(pr);
+
+        // ✅ Get requester email using requesterId
+        String requesterEmail = userRepository
+                .findById(savedPr.getRequesterId())
+                .map(User::getEmail)
+                .orElse(null);
+
+        if (requesterEmail != null) {
+            emailService.send(
+                    requesterEmail,
+                    "PR Submitted: " + savedPr.getPrNumber(),
+                    templateService.prSubmitted(savedPr)
+            );
+        }
+
+        return savedPr;
+    }
+
 
     // ================= PR NUMBER =================
     private String generatePrNumber() {
         return "PR-" + System.currentTimeMillis();
     }
 
-    // ================= CREATE PR =================
-    public PurchaseRequisitionDto createPr(PurchaseRequisitionDto dto) {
-
-        if (!userRepository.existsById(dto.getRequesterId())) {
-            throw new RuntimeException("Requester not found");
-        }
-
-        validateItems(dto);
-
-        BigDecimal total = calculateTotal(dto);
-        validateBudget(total);
-
-        Vendor vendor = vendorRepository.findById(dto.getVendorId())
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
-
-        if (!vendor.getIsActive()) {
-            throw new RuntimeException("Vendor is inactive. We cannot create PR with an inactive vendor");
-        }
-
-        PurchaseRequisition pr = new PurchaseRequisition();
-        pr.setPrNumber(generatePrNumber());
-        pr.setRequesterId(dto.getRequesterId());
-        pr.setVendor(vendor);
-        pr.setStatus(PrStatus.DRAFT);
-        pr.setTotalAmount(total);
-
-        saveJsonItems(pr, dto);
-
-        return toDto(prRepository.save(pr));
-    }
 
     // ================= UPDATE PR =================
     public PurchaseRequisitionDto updatePr(Long id, PurchaseRequisitionDto dto) {
@@ -220,15 +218,52 @@ public class PurchaseRequisitionService {
         approvalHistoryRepository.save(h);
     }
 
-    
 
-    // ================= DTO CONVERTER =================
+    // FIXED createPr - Replace your existing one
+    public PurchaseRequisitionDto createPr(PurchaseRequisitionDto dto) {
+
+        validateItems(dto);
+
+        BigDecimal total = calculateTotal(dto);
+        validateBudget(total);
+
+        Vendor vendor = vendorRepository.findById(dto.getVendorId())
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        if (!vendor.getIsActive()) {
+            throw new RuntimeException("Vendor is inactive");
+        }
+
+        PurchaseRequisition pr = new PurchaseRequisition();
+        pr.setPrNumber(generatePrNumber());
+        pr.setRequesterEmail(dto.getRequesterEmail());
+        pr.setRequesterId(dto.getRequesterId()); // NEW
+        pr.setVendor(vendor);
+        pr.setStatus(PrStatus.DRAFT);
+        pr.setTotalAmount(total);
+
+        saveJsonItems(pr, dto);
+
+        PurchaseRequisition saved = prRepository.save(pr);
+
+        // NEW: Send email immediately
+        emailService.send(
+                saved.getRequesterEmail(),
+                "PR Created: " + saved.getPrNumber(),
+                templateService.prSubmitted(saved)
+        );
+
+        return toDto(saved);
+    }
+
+    // FIXED toDto - Replace your existing one
     private PurchaseRequisitionDto toDto(PurchaseRequisition pr) {
 
         PurchaseRequisitionDto dto = new PurchaseRequisitionDto();
         dto.setId(pr.getId());
         dto.setPrNumber(pr.getPrNumber());
         dto.setRequesterId(pr.getRequesterId());
+        dto.setRequesterEmail(pr.getRequesterEmail());  // NEW
         dto.setVendorId(pr.getVendor().getId());
         dto.setStatus(pr.getStatus());
         dto.setTotalAmount(pr.getTotalAmount());
@@ -241,4 +276,6 @@ public class PurchaseRequisitionService {
 
         return dto;
     }
+
+
 }
