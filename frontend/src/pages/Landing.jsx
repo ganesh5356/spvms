@@ -3,7 +3,7 @@ import procurementImg from '../assets/illustration-procurement.svg'
 import vendorsImg from '../assets/illustration-vendors.svg'
 
 export default function Landing() {
-  const swaggerUrl = `${window.location.protocol}//${window.location.hostname}:8080/swagger-ui.html`
+  const swaggerUrl = `${window.location.protocol}//${window.location.hostname}:8082/swagger-ui.html`
   return (
     <section className="landing">
       <div className="landing-hero">

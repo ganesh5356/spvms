@@ -7,13 +7,19 @@ import Modal from '../../components/Modal.jsx'
 export default function VendorsPage() {
   const { token } = useAuth()
   const client = createClient(() => token)
+
   const [vendors, setVendors] = useState([])
   const [q, setQ] = useState({ rating: '', location: '', category: '', compliant: '', page: 0, size: 10 })
+
   const [form, setForm] = useState({
     name: '', contactName: '', email: '', phone: '', address: '',
     gstNumber: '', location: '', category: '', rating: 5, compliant: true, isActive: true
   })
+
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteSuccess, setDeleteSuccess] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [editErrors, setEditErrors] = useState({})
   const [editError, setEditError] = useState('')
@@ -21,6 +27,28 @@ export default function VendorsPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+
+  
+
+
+  /* ---------------- SUCCESS MESSAGE AUTO HIDE ---------------- */
+  useEffect(() => {
+    if (successMsg) {
+      const t = setTimeout(() => setSuccessMsg(''), 3000)
+      return () => clearTimeout(t)
+    }
+  }, [successMsg])
+
+  useEffect(() => {
+  if (deleteSuccess || deleteError) {
+    const t = setTimeout(() => {
+      setDeleteSuccess('')
+      setDeleteError('')
+    }, 3000)
+    return () => clearTimeout(t)
+  }
+}, [deleteSuccess, deleteError])
+
 
   function validateVendor(vendor) {
     const errors = {}
@@ -46,6 +74,7 @@ export default function VendorsPage() {
     setVendors(list)
     if (res && res.totalPages != null) setTotalPages(res.totalPages)
   }
+
   useEffect(() => { load() }, [])
 
   async function search() {
@@ -56,6 +85,7 @@ export default function VendorsPage() {
     if (q.compliant) params.set('compliant', q.compliant)
     params.set('page', q.page)
     params.set('size', q.size)
+
     const res = await client.get(`/api/vendors/search?${params.toString()}`)
     const list = Array.isArray(res) ? res : (res && res.content) || []
     setVendors(list)
@@ -69,8 +99,6 @@ export default function VendorsPage() {
       setFieldErrors(errors)
       return
     }
-    setError('')
-    setFieldErrors({})
     try {
       await client.post('/api/vendors', { ...form, rating: Number(form.rating) })
       setForm({
@@ -80,8 +108,7 @@ export default function VendorsPage() {
       setShowCreate(false)
       await load()
     } catch (err) {
-      const errorMsg = extractErrorMessage(err)
-      setError(`❌ ${errorMsg}`)
+      setError(`❌ ${extractErrorMessage(err)}`)
     }
   }
 
@@ -92,40 +119,46 @@ export default function VendorsPage() {
       setEditErrors(errors)
       return
     }
-    setEditError('')
-    setEditErrors({})
     try {
-      const payload = { ...edit, rating: Number(edit.rating) }
-      await client.put(`/api/vendors/${edit.id}`, payload)
+      await client.put(`/api/vendors/${edit.id}`, { ...edit, rating: Number(edit.rating) })
       setEdit(null)
       await search()
     } catch (err) {
-      const errorMsg = extractErrorMessage(err)
-      setEditError(`❌ ${errorMsg}`)
+      setEditError(`❌ ${extractErrorMessage(err)}`)
     }
   }
 
-  async function softDeleteVendor(id) {
-    if (window.confirm('Soft delete this vendor? (Data will be hidden but not permanently removed)'))
-      try {
-        await client.del(`/api/vendors/${id}`)
-        setDeleteId(null)
-        await search()
-      } catch (err) {
-        alert('Error: ' + extractErrorMessage(err))
-      }
-  }
+  /* ---------------- DELETE WITH SUCCESS MESSAGE ---------------- */
 
-  async function hardDeleteVendor(id) {
-    if (window.confirm('⚠️ Hard delete this vendor? This action cannot be undone!'))
-      try {
-        await client.post(`/api/vendors/${id}/hard-delete`, {})
-        setDeleteId(null)
-        await search()
-      } catch (err) {
-        alert('Error: ' + extractErrorMessage(err))
-      }
+ async function softDeleteVendor(id) {
+  if (!window.confirm('Soft delete this vendor?')) return
+  try {
+    await client.del(`/api/vendors/${id}`)
+    setDeleteSuccess('Vendor soft deleted successfully')
+    setDeleteError('')
+    setDeleteId(null)
+    await load()
+  } catch (err) {
+    setDeleteError(extractErrorMessage(err))
+    setDeleteSuccess('')
   }
+}
+
+
+async function hardDeleteVendor(id) {
+  if (!window.confirm('⚠️ Hard delete this vendor? This action cannot be undone!')) return
+  try {
+    await client.del(`/api/vendors/${id}/hard`)
+    setDeleteSuccess('Vendor permanently deleted successfully')
+    setDeleteError('')
+    setDeleteId(null)
+    await load()
+  } catch (err) {
+    setDeleteError(extractErrorMessage(err))
+    setDeleteSuccess('')
+  }
+}
+
 
   return (
     <div className="panel">
@@ -133,36 +166,34 @@ export default function VendorsPage() {
         <h3>Vendors</h3>
         <button className="btn" onClick={() => setShowCreate(true)}>Add Vendor</button>
       </div>
-      <div className="search-row">
-        <input placeholder="Location" value={q.location} onChange={e=>setQ({...q,location:e.target.value})} />
-        <input placeholder="Category" value={q.category} onChange={e=>setQ({...q,category:e.target.value})} />
-        <select value={q.compliant} onChange={e=>setQ({...q,compliant:e.target.value})}>
-          <option value="">Compliance</option>
-          <option value="true">Compliant</option>
-          <option value="false">Non-compliant</option>
-        </select>
-        <select value={q.rating} onChange={e=>setQ({...q,rating:e.target.value})}>
-          <option value="">Rating</option>
-          <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
-        </select>
-        <select value={q.size} onChange={e=>setQ({...q,size:Number(e.target.value)})}>
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-        <button className="btn outline" onClick={search}>Search</button>
-        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8}}>
-          <button className="btn outline small" disabled={q.page<=0} onClick={() => { setQ({...q,page:q.page-1}); setTimeout(search,0) }}>Prev</button>
-          <span style={{color:'#98a2b3'}}>Page {q.page+1} / {Math.max(totalPages,1)}</span>
-          <button className="btn outline small" disabled={q.page+1>=totalPages} onClick={() => { setQ({...q,page:q.page+1}); setTimeout(search,0) }}>Next</button>
-        </div>
+
+          {deleteSuccess && (
+      <div style={{ marginBottom: 10, color: '#16a34a', fontWeight: 600 }}>
+        ✅ {deleteSuccess}
       </div>
+    )}
+
+    {deleteError && (
+      <div style={{ marginBottom: 10, color: '#dc2626', fontWeight: 600 }}>
+        ❌ {deleteError}
+      </div>
+    )}
+
+
+      {/* ✅ SUCCESS MESSAGE */}
+      {successMsg && (
+        <div style={{ marginBottom: 10, color: '#16a34a', fontWeight: 600 }}>
+          ✅ {successMsg}
+        </div>
+      )}
+
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
-              <th>ID</th><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Location</th>
-              <th>Category</th><th>Rating</th><th>Compliant</th><th>Active</th><th>Actions</th>
+              <th>ID</th><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th>
+              <th>Location</th><th>Category</th><th>Rating</th>
+              <th>Compliant</th><th>Active</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -179,12 +210,12 @@ export default function VendorsPage() {
                 <td>{v.compliant ? 'Yes' : 'No'}</td>
                 <td>{v.isActive ? 'Yes' : 'No'}</td>
                 <td>
-                  <div style={{display:'flex', gap:'8px'}}>
+                  <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn small" onClick={() => setEdit(v)}>Edit</button>
                     {deleteId === v.id ? (
                       <>
-                        <button className="btn outline small" style={{color:'#ff6b6b'}} onClick={() => softDeleteVendor(v.id)}>Soft Delete</button>
-                        <button className="btn outline small" style={{color:'#c92a2a'}} onClick={() => hardDeleteVendor(v.id)}>Hard Delete</button>
+                        <button className="btn outline small" style={{ color: '#ff6b6b' }} onClick={() => softDeleteVendor(v.id)}>Soft Delete</button>
+                        <button className="btn outline small" style={{ color: '#c92a2a' }} onClick={() => hardDeleteVendor(v.id)}>Hard Delete</button>
                         <button className="btn outline small" onClick={() => setDeleteId(null)}>Cancel</button>
                       </>
                     ) : (
@@ -259,3 +290,4 @@ export default function VendorsPage() {
     </div>
   )
 }
+

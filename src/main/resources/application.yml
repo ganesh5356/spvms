@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/spvms_user
+    url: jdbc:mysql://localhost:3306/spvms
     username: root
-    password: juhee12345
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   mail:
     host: smtp.gmail.com

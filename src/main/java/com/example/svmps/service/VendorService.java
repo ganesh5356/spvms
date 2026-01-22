@@ -8,20 +8,26 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.svmps.dto.VendorDto;
+import com.example.svmps.entity.PurchaseOrder;
 import com.example.svmps.entity.PurchaseRequisition;
 import com.example.svmps.entity.Vendor;
 import com.example.svmps.repository.PurchaseRequisitionRepository;
+import com.example.svmps.repository.PurchaseOrderRepository;
 import com.example.svmps.repository.VendorRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class VendorService {
 
     private final VendorRepository vendorRepository;
     private final PurchaseRequisitionRepository purchaseRequisitionRepository;
+    private final PurchaseOrderRepository purchaseOrderRepository;
 
-    public VendorService(VendorRepository vendorRepository, PurchaseRequisitionRepository purchaseRequisitionRepository) {
+    public VendorService(VendorRepository vendorRepository, PurchaseRequisitionRepository purchaseRequisitionRepository, PurchaseOrderRepository purchaseOrderRepository) {
         this.vendorRepository = vendorRepository;
         this.purchaseRequisitionRepository = purchaseRequisitionRepository;
+        this.purchaseOrderRepository = purchaseOrderRepository;
     }
 
     // CREATE VENDOR
@@ -96,20 +102,40 @@ public class VendorService {
         vendorRepository.save(v);
     }
 
-    // HARD DELETE VENDOR (PERMANENT)
-    public void hardDeleteVendor(Long id) {
-        Vendor v = vendorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vendor not found with id: " + id));
-        
-        // Delete all purchase requisitions associated with this vendor
-        List<PurchaseRequisition> purchaseRequisitions = purchaseRequisitionRepository.findByVendorId(id);
-        if (!purchaseRequisitions.isEmpty()) {
-            purchaseRequisitionRepository.deleteAll(purchaseRequisitions);
+
+
+@Transactional
+public void hardDeleteVendor(Long id) {
+
+    Vendor v = vendorRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Vendor not found with id: " + id));
+
+    // 1️⃣ Get PRs of vendor
+    List<PurchaseRequisition> purchaseRequisitions =
+            purchaseRequisitionRepository.findByVendorId(id);
+
+    // 2️⃣ Delete POs first
+    for (PurchaseRequisition pr : purchaseRequisitions) {
+        List<PurchaseOrder> purchaseOrders =
+              purchaseOrderRepository.findByPrId(pr.getId());
+
+
+
+
+        if (!purchaseOrders.isEmpty()) {
+            purchaseOrderRepository.deleteAll(purchaseOrders);
         }
-        
-        // Now delete the vendor
-        vendorRepository.delete(v);
     }
+
+    // 3️⃣ Delete PRs
+    if (!purchaseRequisitions.isEmpty()) {
+        purchaseRequisitionRepository.deleteAll(purchaseRequisitions);
+    }
+
+    // 4️⃣ Delete Vendor
+    vendorRepository.delete(v);
+}
+
 
     // ENTITY → DTO MAPPER
     private VendorDto toDto(Vendor v) {

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,16 +64,16 @@ public class VendorController {
 
     // DELETE (SOFT DELETE)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVendor(@PathVariable Long id) {
+    public ResponseEntity<String> deleteVendor(@PathVariable Long id) {
         vendorService.deleteVendor(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Vendor with id " + id + " has been soft deleted.");
     }
 
     // HARD DELETE (PERMANENT)
-    @PostMapping("/{id}/hard-delete")
-    public ResponseEntity<Void> hardDeleteVendor(@PathVariable Long id) {
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<String> hardDeleteVendor(@PathVariable Long id) {
         vendorService.hardDeleteVendor(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Vendor with id " + id + " has been permanently deleted.");
     }
 
     //  SEARCH VENDORS 
