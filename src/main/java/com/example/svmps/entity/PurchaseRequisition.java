@@ -25,8 +25,7 @@ public class PurchaseRequisition {
     @Column(name = "pr_number", unique = true, nullable = false)
     private String prNumber;
 
-    @Column(name = "requester_id", nullable = false)
-    private Long requesterId;
+
 
     @ManyToOne
     @JoinColumn(name = "vendor_id")
@@ -103,13 +102,7 @@ public class PurchaseRequisition {
         this.prNumber = prNumber;
     }
 
-    public Long getRequesterId() {
-        return requesterId;
-    }
 
-    public void setRequesterId(Long requesterId) {
-        this.requesterId = requesterId;
-    }
 
     public Vendor getVendor() {
         return vendor;

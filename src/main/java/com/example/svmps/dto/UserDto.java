@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+import java.util.Set;
+import java.util.HashSet;
+
 public class UserDto {
     private Long id;
 
@@ -25,6 +28,7 @@ public class UserDto {
     private String email;
 
     private Boolean isActive;
+    private Set<String> roles = new HashSet<>();
 
     // getters & setters
     public Long getId() { return id; }
@@ -37,4 +41,6 @@ public class UserDto {
     public void setEmail(String email) { this.email = email; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Set<String> getRoles() { return roles; }
+    public void setRoles(Set<String> roles) { this.roles = roles; }
 }

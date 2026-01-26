@@ -2,9 +2,13 @@ package com.example.svmps.service;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 
@@ -26,16 +30,16 @@ public class PurchaseOrderService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PurchaseOrderService(PurchaseOrderRepository poRepo,
-                                PurchaseRequisitionRepository prRepo) {
+            PurchaseRequisitionRepository prRepo) {
         this.poRepo = poRepo;
         this.prRepo = prRepo;
     }
 
     // ================= CREATE PO =================
     public PurchaseOrderDto createPo(Long prId,
-                                     BigDecimal cgstPercent,
-                                     BigDecimal sgstPercent,
-                                     BigDecimal igstPercent) {
+            BigDecimal cgstPercent,
+            BigDecimal sgstPercent,
+            BigDecimal igstPercent) {
 
         PurchaseRequisition pr = prRepo.findById(prId)
                 .orElseThrow(() -> new RuntimeException("PR not found"));
@@ -59,11 +63,11 @@ public class PurchaseOrderService {
         po.setIgstPercent(igstPercent);
 
         BigDecimal cgstAmount = pr.getTotalAmount()
-                .multiply(cgstPercent).divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+                .multiply(cgstPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal sgstAmount = pr.getTotalAmount()
-                .multiply(sgstPercent).divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+                .multiply(sgstPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal igstAmount = pr.getTotalAmount()
-                .multiply(igstPercent).divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP);
+                .multiply(igstPercent).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         po.setCgstAmount(cgstAmount);
         po.setSgstAmount(sgstAmount);
@@ -96,8 +100,7 @@ public class PurchaseOrderService {
         po.setStatus(
                 totalDelivered == po.getTotalQuantity()
                         ? "DELIVERED"
-                        : "PARTIAL_DELIVERED"
-        );
+                        : "PARTIAL_DELIVERED");
 
         return toDto(poRepo.save(po));
     }
@@ -120,24 +123,26 @@ public class PurchaseOrderService {
     public PurchaseOrderDto getPoById(Long poId) {
         return toDto(
                 poRepo.findById(poId)
-                        .orElseThrow(() -> new RuntimeException("PO not found"))
-        );
+                        .orElseThrow(() -> new RuntimeException("PO not found")));
     }
 
+    // ================= GET POs BY PR ID =================
+    // ADMIN, PROCUREMENT, FINANCE
+    public List<PurchaseOrderDto> getPosByPrId(Long prId) {
 
-// ================= GET POs BY PR ID =================
-// ADMIN, PROCUREMENT, FINANCE
-public List<PurchaseOrderDto> getPosByPrId(Long prId) {
-
-    return poRepo.findAll()
-            .stream()
-            .filter(po -> po.getPrId() != null && po.getPrId().equals(prId))
-            .map(this::toDto)
-            .toList();
-}
+        return poRepo.findAll()
+                .stream()
+                .filter(po -> po.getPrId() != null && po.getPrId().equals(prId))
+                .map(this::toDto)
+                .toList();
+    }
 
     public List<PurchaseOrderDto> getAllPos() {
         return poRepo.findAll().stream().map(this::toDto).toList();
+    }
+
+    public Page<PurchaseOrderDto> getAllPosWithPagination(Pageable pageable) {
+        return poRepo.findAll(pageable).map(this::toDto);
     }
 
     public List<PurchaseOrderDto> getPosByVendorId(Long vendorId) {
@@ -187,13 +192,12 @@ public List<PurchaseOrderDto> getPosByPrId(Long prId) {
             document.add(Chunk.NEWLINE);
 
             BigDecimal unitPrice = po.getBaseAmount()
-                    .divide(BigDecimal.valueOf(po.getTotalQuantity()), 2, BigDecimal.ROUND_HALF_UP);
-            BigDecimal deliveredAmount =
-                    unitPrice.multiply(BigDecimal.valueOf(po.getDeliveredQuantity()));
+                    .divide(BigDecimal.valueOf(po.getTotalQuantity()), 2, RoundingMode.HALF_UP);
+            BigDecimal deliveredAmount = unitPrice.multiply(BigDecimal.valueOf(po.getDeliveredQuantity()));
 
             PdfPTable items = new PdfPTable(4);
             items.setWidthPercentage(100);
-            items.setWidths(new float[]{4, 2, 2, 2});
+            items.setWidths(new float[] { 4, 2, 2, 2 });
 
             addHeader(items, "Description");
             addHeader(items, "Qty");
@@ -224,8 +228,7 @@ public List<PurchaseOrderDto> getPosByPrId(Long prId) {
 
             Paragraph total = new Paragraph(
                     "GRAND TOTAL : " + po.getTotalAmount(),
-                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)
-            );
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
             total.setAlignment(Element.ALIGN_RIGHT);
             document.add(total);
 

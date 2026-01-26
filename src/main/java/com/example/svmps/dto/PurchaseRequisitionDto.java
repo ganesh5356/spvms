@@ -11,8 +11,7 @@ public class PurchaseRequisitionDto {
     private Long id;
     private String prNumber; // AUTO-GENERATED
 
-    @NotNull
-    private Long requesterId;
+
 
     @NotNull
     private Long vendorId;
@@ -56,13 +55,7 @@ public class PurchaseRequisitionDto {
         this.prNumber = prNumber;
     }
 
-    public Long getRequesterId() {
-        return requesterId;
-    }
 
-    public void setRequesterId(Long requesterId) {
-        this.requesterId = requesterId;
-    }
 
     public Long getVendorId() {
         return vendorId;

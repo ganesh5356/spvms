@@ -62,43 +62,10 @@ public class AuthService {
         user.setEmail(req.getEmail());
         user.setIsActive(true);
 
-        Set<Role> assignedRoles = new HashSet<>();
-
-        if (req.getRoles() != null && !req.getRoles().isEmpty()) {
-            for (String roleName : req.getRoles()) {
-                Role role = roleRepository.findByName(roleName)
-                        .orElseThrow(() ->
-                                new IllegalArgumentException("Role not found: " + roleName));
-                assignedRoles.add(role);
-            }
-        } else {
-            Role defaultRole = roleRepository.findByName("VENDOR")
-                    .orElseThrow(() ->
-                            new IllegalStateException("Default role VENDOR not found"));
-            assignedRoles.add(defaultRole);
-        }
-
-        user.setRoles(assignedRoles);
+        // No default roles - users start with no roles
+        user.setRoles(new HashSet<>());
         User savedUser = userRepository.save(user);
-
-        // 🔥 If VENDOR role is assigned, create a Vendor profile
-        if (assignedRoles.stream().anyMatch(r -> "VENDOR".equals(r.getName()))) {
-            if (!vendorRepository.findByEmail(savedUser.getEmail()).isPresent()) {
-                Vendor v = new Vendor();
-                v.setName(savedUser.getUsername() + " Company");
-                v.setEmail(savedUser.getEmail());
-                v.setContactName(savedUser.getUsername());
-                v.setPhone(req.getPhone() != null && !req.getPhone().isBlank() ? req.getPhone() : "0000000000");
-                v.setAddress("Not Provided");
-                v.setGstNumber("00AAAAA0000A0Z0");
-                v.setIsActive(true);
-                v.setCompliant(true);
-                v.setRating(5.0);
-                v.setLocation(req.getLocation() != null && !req.getLocation().isBlank() ? req.getLocation() : "Default");
-                v.setCategory(req.getCategory() != null && !req.getCategory().isBlank() ? req.getCategory() : "Default");
-                vendorRepository.save(v);
-            }
-        }
+        // No vendor profile created during signup - only when admin assigns VENDOR role
 
         String token = jwtUtil.generateToken(
                 savedUser.getUsername(),

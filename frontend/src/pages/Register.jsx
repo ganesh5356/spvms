@@ -7,7 +7,7 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [roles, setRoles] = useState(['VENDOR'])
+  // No roles in signup - users start with no roles
   const nav = useNavigate()
   const client = createClient(() => null)
 
@@ -15,7 +15,7 @@ export default function Register() {
     e.preventDefault()
     setError('')
     try {
-      const res = await client.post('/auth/register', { username, email, password, roles })
+      const res = await client.post('/auth/register', { username, email, password })
       if (res && res.token) {
         nav('/login')
       } else {
@@ -42,24 +42,6 @@ export default function Register() {
           <span>Password</span>
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         </label>
-        <div style={{gridColumn:'1 / -1'}}>
-          <span style={{display:'block',color:'#98a2b3',fontSize:12,marginBottom:6}}>Roles</span>
-          <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-            {['ADMIN','PROCUREMENT','FINANCE','VENDOR'].map(r => (
-              <label key={r} style={{display:'flex',alignItems:'center',gap:8}}>
-                <input
-                  type="checkbox"
-                  checked={roles.includes(r)}
-                  onChange={e => {
-                    if (e.target.checked) setRoles(Array.from(new Set([...roles, r])))
-                    else setRoles(roles.filter(x => x !== r))
-                  }}
-                />
-                <span>{r}</span>
-              </label>
-            ))}
-          </div>
-        </div>
         <button type="submit" className="btn primary">Register</button>
         {error && <div className="error">{error}</div>}
       </form>

@@ -2,7 +2,6 @@ package com.example.svmps.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -11,28 +10,20 @@ import jakarta.validation.constraints.Size;
 public class VendorDto {
 
     private Long id;
+    private Long userId;
 
-    // Vendor Name
-    @NotBlank(message = "Vendor name is required")
-    @Size(min = 3, max = 100, message = "Vendor name must be between 3 and 100 characters")
+    // Vendor Name (Fetched from User if not provided)
     private String name;
 
-    // Contact Person Name
-    @NotBlank(message = "Contact name is required")
-    @Size(min = 3, max = 100, message = "Contact name must be between 3 and 100 characters")
+    // Contact Person Name (Fetched from User if not provided)
     private String contactName;
 
-    // Email Validation
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    // Email (Fetched from User if not provided)
     private String email;
 
     // Phone Number (Indian format)
     @NotBlank(message = "Phone number is required")
-    @Pattern(
-        regexp = "^[6-9]\\d{9}$",
-        message = "Phone number must be a valid 10-digit Indian mobile number"
-    )
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number must be a valid 10-digit Indian mobile number")
     private String phone;
 
     // Address
@@ -43,10 +34,7 @@ public class VendorDto {
     // GST Number (India – simplified format)
     // Example: 29ABCDE1234F1Z5
     @NotBlank(message = "GST number is required")
-    @Pattern(
-        regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$",
-        message = "Invalid GST number format"
-    )
+    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", message = "Invalid GST number format")
     private String gstNumber;
 
     // Active Status
@@ -75,39 +63,107 @@ public class VendorDto {
 
     // GETTERS & SETTERS
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getContactName() { return contactName; }
-    public void setContactName(String contactName) { this.contactName = contactName; }
+    public Long getUserId() {
+        return userId;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getName() {
+        return name;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getGstNumber() { return gstNumber; }
-    public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
+    public String getContactName() {
+        return contactName;
+    }
 
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public void setContactName(String contactName) {
+        this.contactName = contactName;
+    }
 
-    public Double getRating() { return rating; }
-    public void setRating(Double rating) { this.rating = rating; }
+    public String getEmail() {
+        return email;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public Boolean getCompliant() { return compliant; }
-    public void setCompliant(Boolean compliant) { this.compliant = compliant; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getGstNumber() {
+        return gstNumber;
+    }
+
+    public void setGstNumber(String gstNumber) {
+        this.gstNumber = gstNumber;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Boolean getCompliant() {
+        return compliant;
+    }
+
+    public void setCompliant(Boolean compliant) {
+        this.compliant = compliant;
+    }
 }

@@ -3,6 +3,9 @@ package com.example.svmps.service;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.example.svmps.entity.*;
 import org.springframework.data.aot.PublicMethodReflectiveProcessor;
 import org.springframework.stereotype.Service;
@@ -56,11 +59,7 @@ public class PurchaseRequisitionService {
         pr.setStatus("SUBMITTED");
         PurchaseRequisition savedPr = prRepository.save(pr);
 
-        // ✅ Get requester email using requesterId
-        String requesterEmail = userRepository
-                .findById(savedPr.getRequesterId())
-                .map(User::getEmail)
-                .orElse(null);
+        String requesterEmail = savedPr.getRequesterEmail();
 
         if (requesterEmail != null) {
             emailService.send(
@@ -105,8 +104,8 @@ public class PurchaseRequisitionService {
 
         PurchaseRequisition pr = getPr(id);
 
-        if (!PrStatus.DRAFT.equals(pr.getStatus())) {
-            throw new RuntimeException("Only DRAFT can submit");
+        if (!PrStatus.DRAFT.equals(pr.getStatus()) && !PrStatus.PENDING.equals(pr.getStatus())) {
+            throw new RuntimeException("Only DRAFT or PENDING can submit");
         }
 
         pr.setStatus(PrStatus.SUBMITTED);
@@ -168,6 +167,12 @@ public class PurchaseRequisitionService {
                 .stream()
                 .map(this::toDto)
                 .toList();
+    }
+    
+    // ================= GET ALL WITH PAGINATION =================
+    public Page<PurchaseRequisitionDto> getAllPrsWithPagination(Pageable pageable) {
+        return prRepository.findAll(pageable)
+                .map(this::toDto);
     }
 
     // ================= HELPERS =================
@@ -245,7 +250,6 @@ public class PurchaseRequisitionService {
         PurchaseRequisition pr = new PurchaseRequisition();
         pr.setPrNumber(generatePrNumber());
         pr.setRequesterEmail(dto.getRequesterEmail());
-        pr.setRequesterId(dto.getRequesterId()); // NEW
         pr.setVendor(vendor);
         pr.setStatus(PrStatus.DRAFT);
         pr.setTotalAmount(total);
@@ -270,7 +274,6 @@ public class PurchaseRequisitionService {
         PurchaseRequisitionDto dto = new PurchaseRequisitionDto();
         dto.setId(pr.getId());
         dto.setPrNumber(pr.getPrNumber());
-        dto.setRequesterId(pr.getRequesterId());
         dto.setRequesterEmail(pr.getRequesterEmail());  // NEW
         dto.setVendorId(pr.getVendor().getId());
         dto.setStatus(pr.getStatus());

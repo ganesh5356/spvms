@@ -14,7 +14,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('ADMIN')")   // 🔐 ADMIN ONLY (CLASS LEVEL)
+@PreAuthorize("hasRole('ADMIN')") // 🔐 ADMIN ONLY (CLASS LEVEL)
 public class UserController {
 
     private final UserService userService;
@@ -53,5 +53,19 @@ public class UserController {
 
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // GET USERS BY ROLE → ADMIN, PROCUREMENT
+    @GetMapping("/role/{roleName}")
+    @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT')")
+    public List<UserDto> getUsersByRole(@PathVariable String roleName) {
+        return userService.getUsersByRole(roleName);
+    }
+
+    // GET USERS WITH NO ROLES → ADMIN, PROCUREMENT
+    @GetMapping("/no-roles")
+    @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT')")
+    public List<UserDto> getUsersWithNoRoles() {
+        return userService.getUsersWithNoRoles();
     }
 }

@@ -37,8 +37,16 @@ export default function VendorPO() {
     setDeliverError('')
     setDeliverErrors({})
 
+    // Find the PO to validate against remaining quantity
+    const po = pos.find(p => p.id === deliverData.poId)
+    
     if (deliverData.quantity < 1) {
       setDeliverErrors({ quantity: 'Quantity must be at least 1' })
+      return
+    }
+    
+    if (deliverData.quantity > po.remainingQuantity) {
+      setDeliverErrors({ quantity: `Cannot deliver more than remaining quantity (${po.remainingQuantity})` })
       return
     }
 
@@ -76,7 +84,7 @@ export default function VendorPO() {
     }
   }
 
-  if (error) return <div className="error-banner">❌ {error}</div>
+  if (error) return <div className="error-banner"> {error}</div>
 
   return (
     <div className="vendor-po-container">
@@ -146,6 +154,9 @@ export default function VendorPO() {
             <p style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-muted)' }}>
               Enter the quantity you are delivering for PO ID: <strong>{deliverData.poId}</strong>
             </p>
+            <p style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-info)' }}>
+              Remaining quantity to deliver: <strong>{pos.find(p => p.id === deliverData.poId)?.remainingQuantity || 0}</strong>
+            </p>
           </div>
           <label className="form-label" style={{ gridColumn: '1 / -1' }}>
             <span>Quantity to Deliver</span>
@@ -153,9 +164,11 @@ export default function VendorPO() {
               className="form-input" 
               type="number" 
               min="1" 
+              max={pos.find(p => p.id === deliverData.poId)?.remainingQuantity || 1}
               value={deliverData.quantity} 
-              onChange={e => setDeliverData({...deliverData, quantity: e.target.value})}
+              onChange={e => setDeliverData({...deliverData, quantity: parseInt(e.target.value) || 0})}
               required 
+              style={{ borderColor: deliverErrors.quantity ? 'var(--danger)' : '' }}
             />
             {deliverErrors.quantity && <span className="field-error">{deliverErrors.quantity}</span>}
           </label>

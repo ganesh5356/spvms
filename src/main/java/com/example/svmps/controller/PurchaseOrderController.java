@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.example.svmps.dto.PurchaseOrderDto;
 import com.example.svmps.service.PurchaseOrderService;
 
@@ -68,6 +71,13 @@ public class PurchaseOrderController {
     @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT','FINANCE')")
     public List<PurchaseOrderDto> getAllPos() {
         return poService.getAllPos();
+    }
+    
+    // ================= GET ALL POs WITH PAGINATION =================
+    @GetMapping(params = {"page", "size"})
+    @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT','FINANCE')")
+    public Page<PurchaseOrderDto> getAllPosWithPagination(Pageable pageable) {
+        return poService.getAllPosWithPagination(pageable);
     }
 
     // ================= GET POs BY PR ID =================

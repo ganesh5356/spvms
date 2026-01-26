@@ -1,6 +1,8 @@
 package com.example.svmps.controller;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -101,5 +103,12 @@ public class PurchaseRequisitionController {
     @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT','FINANCE')")
     public List<PurchaseRequisitionDto> fetchAllPrs() {
         return prService.getAllPrs();
+    }
+    
+    // GET ALL PRs WITH PAGINATION → ADMIN, PROCUREMENT, FINANCE
+    @GetMapping(params = {"page", "size"})
+    @PreAuthorize("hasAnyRole('ADMIN','PROCUREMENT','FINANCE')")
+    public Page<PurchaseRequisitionDto> fetchAllPrsWithPagination(Pageable pageable) {
+        return prService.getAllPrsWithPagination(pageable);
     }
 }

@@ -12,7 +12,7 @@ export default function Login({ initialTab = 'login' }) {
   const [rUsername, setRUsername] = useState('')
   const [rEmail, setREmail] = useState('')
   const [rPassword, setRPassword] = useState('')
-  const [rRoles, setRRoles] = useState(['VENDOR'])
+  // No roles in join us form - users start with no roles
   const [rPhone, setRPhone] = useState('')
   const [rLocation, setRLocation] = useState('')
   const [rCategory, setRCategory] = useState('')
@@ -44,14 +44,6 @@ export default function Login({ initialTab = 'login' }) {
     if (!rEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.email = 'Invalid email format'
     if (!rPassword.trim()) errors.password = 'Password is required'
     if (rPassword.length < 6) errors.password = 'Password must be at least 6 characters'
-    
-    // Vendor-specific validations
-    if (rRoles.includes('VENDOR')) {
-      if (!rPhone.trim()) errors.phone = 'Phone is required for vendors'
-      if (!rPhone.match(/^[6-9]\d{9}$/)) errors.phone = 'Invalid 10-digit mobile number'
-      if (!rLocation.trim()) errors.location = 'Location is required for vendors'
-      if (!rCategory.trim()) errors.category = 'Category is required for vendors'
-    }
     
     return errors
   }
@@ -96,15 +88,7 @@ export default function Login({ initialTab = 'login' }) {
       const payload = {
         username: rUsername,
         email: rEmail,
-        password: rPassword,
-        roles: rRoles.length ? rRoles : ['VENDOR']
-      }
-      
-      // Add vendor-specific fields if VENDOR role is selected
-      if (rRoles.includes('VENDOR')) {
-        payload.phone = rPhone
-        payload.location = rLocation
-        payload.category = rCategory
+        password: rPassword
       }
       
       await client.post('/auth/register', payload)
@@ -114,7 +98,7 @@ export default function Login({ initialTab = 'login' }) {
       setRUsername('')
       setREmail('')
       setRPassword('')
-      setRRoles(['VENDOR'])
+
       setRPhone('')
       setRLocation('')
       setRCategory('')
@@ -188,44 +172,7 @@ export default function Login({ initialTab = 'login' }) {
               {rFieldErrors.password && <span className="field-error">{rFieldErrors.password}</span>}
             </label>
             
-            {rRoles.includes('VENDOR') && (
-              <>
-                <label className="form-label">
-                  <span>Mobile Number</span>
-                  <input className="form-input" type="tel" placeholder="10-digit mobile" value={rPhone} onChange={e => setRPhone(e.target.value)} style={{borderColor: rFieldErrors.phone ? 'var(--danger)' : ''}} required />
-                  {rFieldErrors.phone && <span className="field-error">{rFieldErrors.phone}</span>}
-                </label>
-                <label className="form-label">
-                  <span>Location (City/State)</span>
-                  <input className="form-input" placeholder="e.g., Mumbai, Maharashtra" value={rLocation} onChange={e => setRLocation(e.target.value)} style={{borderColor: rFieldErrors.location ? 'var(--danger)' : ''}} required />
-                  {rFieldErrors.location && <span className="field-error">{rFieldErrors.location}</span>}
-                </label>
-                <label className="form-label">
-                  <span>Category</span>
-                  <input className="form-input" placeholder="e.g., IT, Hardware, Logistics" value={rCategory} onChange={e => setRCategory(e.target.value)} style={{borderColor: rFieldErrors.category ? 'var(--danger)' : ''}} required />
-                  {rFieldErrors.category && <span className="field-error">{rFieldErrors.category}</span>}
-                </label>
-              </>
-            )}
-            
-            <div>
-              <span className="form-label" style={{ marginBottom: 8 }}>Select Roles</span>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {['ADMIN', 'PROCUREMENT', 'FINANCE', 'VENDOR'].map(r => (
-                  <label key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                    <input
-                      type="checkbox"
-                      checked={rRoles.includes(r)}
-                      onChange={e => {
-                        if (e.target.checked) setRRoles(Array.from(new Set([...rRoles, r])))
-                        else setRRoles(rRoles.filter(x => x !== r))
-                      }}
-                    />
-                    <span>{r}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+
             <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Create Account</button>
             {rError && <div className="error-banner">{rError}</div>}
             {rSuccess && <div className="success-banner">{rSuccess}</div>}

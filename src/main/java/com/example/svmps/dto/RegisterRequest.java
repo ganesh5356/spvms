@@ -29,8 +29,7 @@ public class RegisterRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    // Roles validation (optional but controlled)
-    @NotEmpty(message = "At least one role must be specified")
+    // Roles (optional - users can register without roles)
     private Set<
         @Pattern(
             regexp = "ADMIN|PROCUREMENT|FINANCE|VENDOR",
