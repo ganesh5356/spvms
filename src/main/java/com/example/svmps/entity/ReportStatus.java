@@ -1,4 +1,7 @@
 package com.example.svmps.entity;
 
-public class ReportStatus {
+public enum ReportStatus {
+    PENDING,
+    SUCCESS,
+    FAILED
 }

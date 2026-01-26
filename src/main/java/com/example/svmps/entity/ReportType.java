@@ -1,4 +1,7 @@
 package com.example.svmps.entity;
 
-public class ReportType {
+public enum ReportType {
+    DAILY,
+    WEEKLY
 }
+

@@ -1,20 +1,23 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/spvms
+    url: jdbc:mysql://localhost:3306/spvms_user
     username: root
-    password: root
+    password: juhee12345
     driver-class-name: com.mysql.cj.jdbc.Driver
   mail:
     host: smtp.gmail.com
     port: 587
     username: saxena.juhee8@gmail.com
-    password: aniy gusc verd msku
+    password: "aniy gusc verd msku"
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+app:
+  reports:
+    email: juheesaxena57@gmail.com
 
 
   jpa:
@@ -27,7 +30,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
 
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
     baseline-on-migrate: true
 

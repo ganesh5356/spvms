@@ -10,6 +10,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.springframework.core.io.ByteArrayResource;
 
 @Service
 public class EmailService {
@@ -46,5 +49,35 @@ public class EmailService {
         }
         log.setLastAttempt(LocalDateTime.now());
         repo.save(log);
+    }
+
+
+    public void sendWithMultipleAttachments(
+            String to,
+            String subject,
+            String body,
+            Map<String, byte[]> attachments) {
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(message, true);
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
+                helper.addAttachment(
+                        entry.getKey(),
+                        new ByteArrayResource(entry.getValue())
+                );
+            }
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
     }
 }
