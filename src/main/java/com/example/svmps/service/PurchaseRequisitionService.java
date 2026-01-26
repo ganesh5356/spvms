@@ -127,6 +127,14 @@ public class PurchaseRequisitionService {
         prRepository.save(pr);
 
         saveHistory(pr, approverId, "APPROVED", comments);
+
+        if (pr.getRequesterEmail() != null) {
+            emailService.send(
+                    pr.getRequesterEmail(),
+                    "PR Approved: " + pr.getPrNumber(),
+                    templateService.prApproved(pr)
+            );
+        }
         
         return toDto(pr);
     }
