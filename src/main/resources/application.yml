@@ -5,7 +5,7 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   
-  # IMPORTANT: These must be indented with 2 spaces to be under 'spring'
+  
   jpa:
     hibernate:
       ddl-auto: update
@@ -35,7 +35,7 @@ spring:
 # Root-level properties (0 indentation)
 app:
   reports:
-    email: juheesaxena57@gmail.com
+    email: ganesh938049@gmail.com
 
 springdoc:
   api-docs:

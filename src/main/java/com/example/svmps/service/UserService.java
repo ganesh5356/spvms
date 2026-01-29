@@ -40,6 +40,13 @@ public class UserService {
     public UserDto createUser(UserDto dto) {
         User u = new User();
         u.setUsername(dto.getUsername());
+
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password is required for new users");
+        }
+        if (dto.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long");
+        }
         u.setPassword(passwordEncoder.encode(dto.getPassword()));
         u.setEmail(dto.getEmail());
         u.setIsActive(dto.getIsActive() == null ? true : dto.getIsActive());
@@ -72,11 +79,24 @@ public class UserService {
         u.setUsername(dto.getUsername());
         u.setEmail(dto.getEmail());
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            if (dto.getPassword().length() < 6) {
+                throw new IllegalArgumentException("Password must be at least 6 characters long");
+            }
             u.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         if (dto.getIsActive() != null) {
             u.setIsActive(dto.getIsActive());
         }
+
+        // 🔥 Bidirectional Sync: Keep Vendor profile in sync with User updates
+        vendorRepository.findByUserId(u.getId()).ifPresent(v -> {
+            if (dto.getIsActive() != null)
+                v.setIsActive(u.getIsActive());
+            v.setEmail(u.getEmail());
+            // Optionally sync name if you want the vendor name to follow username
+            // v.setName(u.getUsername() + " Company");
+            vendorRepository.save(v);
+        });
 
         // Update roles if provided
         if (dto.getRoles() != null) { // Update roles if provided (even if empty list to remove all roles)

@@ -28,7 +28,7 @@
                     <pen lineWidth="0.0"/>
                 </graphicElement>
             </rectangle>
-            <image>
+            <image onErrorType="Blank">
                 <reportElement x="10" y="10" width="60" height="55"/>
                 <imageExpression><![CDATA[$P{LOGO_PATH}]]></imageExpression>
             </image>
@@ -106,6 +106,14 @@
     <!-- DETAIL -->
     <detail>
         <band height="25">
+            <rectangle>
+                <reportElement x="0" y="0" width="555" height="25" backcolor="#F9FAFB">
+                    <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
             <textField>
                 <reportElement x="0" y="0" width="80" height="25"/>
                 <box>

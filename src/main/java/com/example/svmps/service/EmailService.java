@@ -27,6 +27,11 @@ public class EmailService {
 
     @Async
     public void send(String to, String subject, String body) {
+        send(null, to, subject, body); // Use default 'from'
+    }
+
+    @Async
+    public void send(String from, String to, String subject, String body) {
         EmailLog log = new EmailLog();
         log.setRecipient(to);
         log.setSubject(subject);
@@ -39,6 +44,12 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            if (from != null && !from.isBlank()) {
+                helper.setFrom(from);
+                helper.setReplyTo(from); // Set Reply-To as well for better compatibility
+            }
+
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);

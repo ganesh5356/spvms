@@ -141,6 +141,18 @@ public class VendorService {
         v.setCategory(dto.getCategory());
         v.setCompliant(dto.getCompliant());
 
+        // 🔥 Bidirectional Sync: Update linked user's status and email
+        if (v.getUser() != null) {
+            User linkedUser = v.getUser();
+            if (dto.getIsActive() != null) {
+                linkedUser.setIsActive(dto.getIsActive());
+            }
+            if (dto.getEmail() != null) {
+                linkedUser.setEmail(dto.getEmail());
+            }
+            userRepository.save(linkedUser);
+        }
+
         return toDto(vendorRepository.save(v));
     }
 
@@ -165,14 +177,14 @@ public class VendorService {
         // 1. Clean up dependencies and delete vendor
         deleteVendorOnly(id);
 
-        // 2. 🔥 ALSO DELETE THE LINKED USER
+        // 2. ALSO DELETE THE LINKED USER
         if (linkedUser != null) {
             userRepository.delete(linkedUser);
         }
     }
 
     /**
-     * 🔥 NEW: Deletes the vendor record and all its dependencies (PRs, POs),
+     * NEW: Deletes the vendor record and all its dependencies (PRs, POs),
      * but DOES NOT delete the linked User account.
      * Useful when a User's role is changed from VENDOR to something else.
      */

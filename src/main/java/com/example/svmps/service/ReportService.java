@@ -19,19 +19,22 @@ public class ReportService {
     private JasperPrint prepareReport(String reportName, List<?> data) {
 
         try {
-            InputStream jrxml =
-                    getClass().getResourceAsStream("/reports/" + reportName + ".jrxml");
+            InputStream jrxml = getClass().getResourceAsStream("/reports/" + reportName + ".jrxml");
 
-            JasperReport report =
-                    JasperCompileManager.compileReport(jrxml);
+            JasperReport report = JasperCompileManager.compileReport(jrxml);
 
-            JRBeanCollectionDataSource dataSource =
-                    new JRBeanCollectionDataSource(data);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(data);
 
             Map<String, Object> params = new HashMap<>();
             params.put("REPORT_TITLE", reportName.toUpperCase() + " REPORT");
-            params.put("LOGO_PATH",
-                    getClass().getResource("/static/logo.png").toString());
+
+            // Handle logo safely
+            java.net.URL logoUrl = getClass().getResource("/static/logo.png");
+            if (logoUrl != null) {
+                params.put("LOGO_PATH", logoUrl.toString());
+            } else {
+                params.put("LOGO_PATH", ""); // Empty string if not found
+            }
 
             return JasperFillManager.fillReport(report, params, dataSource);
 
@@ -62,8 +65,7 @@ public class ReportService {
             exporter.setExporterOutput(
                     new SimpleOutputStreamExporterOutput(out));
 
-            SimpleXlsxReportConfiguration config =
-                    new SimpleXlsxReportConfiguration();
+            SimpleXlsxReportConfiguration config = new SimpleXlsxReportConfiguration();
             config.setDetectCellType(true);
             config.setWhitePageBackground(false);
             config.setRemoveEmptySpaceBetweenRows(true);

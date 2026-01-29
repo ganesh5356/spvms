@@ -33,7 +33,6 @@ public class PurchaseRequisitionService {
     private final EmailService emailService;
     private final EmailTemplateService templateService;
 
-
     private final ObjectMapper mapper = new ObjectMapper();
 
     public PurchaseRequisitionService(
@@ -63,21 +62,19 @@ public class PurchaseRequisitionService {
 
         if (requesterEmail != null) {
             emailService.send(
-                    requesterEmail,
+                    requesterEmail, // From
+                    requesterEmail, // To
                     "PR Submitted: " + savedPr.getPrNumber(),
-                    templateService.prSubmitted(savedPr)
-            );
+                    templateService.prSubmitted(savedPr));
         }
 
         return savedPr;
     }
 
-
     // ================= PR NUMBER =================
     private String generatePrNumber() {
         return "PR-" + System.currentTimeMillis();
     }
-
 
     // ================= UPDATE PR =================
     public PurchaseRequisitionDto updatePr(Long id, PurchaseRequisitionDto dto) {
@@ -109,7 +106,17 @@ public class PurchaseRequisitionService {
         }
 
         pr.setStatus(PrStatus.SUBMITTED);
-        return toDto(prRepository.save(pr));
+        PurchaseRequisition saved = prRepository.save(pr);
+
+        if (saved.getRequesterEmail() != null) {
+            emailService.send(
+                    saved.getRequesterEmail(), // From
+                    saved.getRequesterEmail(), // To
+                    "PR Submitted: " + saved.getPrNumber(),
+                    templateService.prSubmitted(saved));
+        }
+
+        return toDto(saved);
     }
 
     // ================= APPROVE =================
@@ -129,12 +136,12 @@ public class PurchaseRequisitionService {
 
         if (pr.getRequesterEmail() != null) {
             emailService.send(
-                    pr.getRequesterEmail(),
+                    pr.getRequesterEmail(), // From
+                    pr.getRequesterEmail(), // To
                     "PR Approved: " + pr.getPrNumber(),
-                    templateService.prApproved(pr)
-            );
+                    templateService.prApproved(pr));
         }
-        
+
         return toDto(pr);
     }
 
@@ -153,6 +160,14 @@ public class PurchaseRequisitionService {
 
         saveHistory(pr, approverId, "REJECTED", comments);
 
+        if (pr.getRequesterEmail() != null) {
+            emailService.send(
+                    pr.getRequesterEmail(), // From
+                    pr.getRequesterEmail(), // To
+                    "PR Rejected: " + pr.getPrNumber(),
+                    templateService.prRejected(pr, comments));
+        }
+
         return toDto(pr);
     }
 
@@ -168,7 +183,7 @@ public class PurchaseRequisitionService {
                 .map(this::toDto)
                 .toList();
     }
-    
+
     // ================= GET ALL WITH PAGINATION =================
     public Page<PurchaseRequisitionDto> getAllPrsWithPagination(Pageable pageable) {
         return prRepository.findAll(pageable)
@@ -194,8 +209,7 @@ public class PurchaseRequisitionService {
         for (int i = 0; i < dto.getItems().size(); i++) {
             total = total.add(
                     dto.getItemAmounts().get(i)
-                            .multiply(BigDecimal.valueOf(dto.getQuantities().get(i)))
-            );
+                            .multiply(BigDecimal.valueOf(dto.getQuantities().get(i))));
         }
         return total;
     }
@@ -231,7 +245,6 @@ public class PurchaseRequisitionService {
         approvalHistoryRepository.save(h);
     }
 
-
     // FIXED createPr - Replace your existing one
     public PurchaseRequisitionDto createPr(PurchaseRequisitionDto dto) {
 
@@ -260,10 +273,10 @@ public class PurchaseRequisitionService {
 
         // NEW: Send email immediately
         emailService.send(
-                saved.getRequesterEmail(),
+                saved.getRequesterEmail(), // From
+                saved.getRequesterEmail(), // To
                 "PR Created: " + saved.getPrNumber(),
-                templateService.prSubmitted(saved)
-        );
+                templateService.prCreated(saved));
 
         return toDto(saved);
     }
@@ -274,7 +287,7 @@ public class PurchaseRequisitionService {
         PurchaseRequisitionDto dto = new PurchaseRequisitionDto();
         dto.setId(pr.getId());
         dto.setPrNumber(pr.getPrNumber());
-        dto.setRequesterEmail(pr.getRequesterEmail());  // NEW
+        dto.setRequesterEmail(pr.getRequesterEmail()); // NEW
         dto.setVendorId(pr.getVendor().getId());
         dto.setStatus(pr.getStatus());
         dto.setTotalAmount(pr.getTotalAmount());
@@ -283,10 +296,10 @@ public class PurchaseRequisitionService {
             dto.setItems(mapper.readValue(pr.getItemsJson(), List.class));
             dto.setQuantities(mapper.readValue(pr.getQuantityJson(), List.class));
             dto.setItemAmounts(mapper.readValue(pr.getItemAmountJson(), List.class));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         return dto;
     }
-
 
 }

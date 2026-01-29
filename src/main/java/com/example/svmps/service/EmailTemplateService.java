@@ -6,6 +6,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailTemplateService {
 
+    public String prCreated(PurchaseRequisition pr) {
+        return String.format("""
+                <h2>Purchase Requisition Created (Draft)</h2>
+                <p>PR Number: %s</p>
+                <p>Total Amount: %s</p>
+                <p>Status: %s</p>
+                <p>A new purchase requisition has been created as a draft.</p>
+                """, pr.getPrNumber(), pr.getTotalAmount(), pr.getStatus());
+    }
+
     public String prSubmitted(PurchaseRequisition pr) {
         return String.format("""
                 <h2>Purchase Requisition Submitted</h2>
