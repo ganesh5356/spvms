@@ -32,8 +32,7 @@ public class AuthService {
             UserRepository userRepository,
             RoleRepository roleRepository,
             VendorRepository vendorRepository,
-            JwtUtil jwtUtil
-    ) {
+            JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.vendorRepository = vendorRepository;
@@ -69,15 +68,13 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(
                 savedUser.getUsername(),
-                savedUser.getRoles()
-        );
+                savedUser.getRoles());
 
         return new RegisterResponse(
                 savedUser.getId(),
                 savedUser.getUsername(),
                 savedUser.getEmail(),
-                token
-        );
+                token);
     }
 
     /**
@@ -88,21 +85,19 @@ public class AuthService {
     public LoginResponse login(LoginRequest req) {
 
         User user = userRepository.findByUsername(req.getUsername())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Invalid username or password"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
         if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new IllegalStateException("User account is inactive");
+            throw new IllegalArgumentException("User is inactive. Cannot login.");
         }
 
         String token = jwtUtil.generateToken(
                 user.getUsername(),
-                user.getRoles()
-        );
+                user.getRoles());
 
         Instant expiresAt = Instant.now()
                 .plusMillis(jwtUtil.getExpirationTimeMs());

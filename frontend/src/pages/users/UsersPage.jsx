@@ -11,12 +11,32 @@ export default function UsersPage() {
   const [edit, setEdit] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [activeTab, setActiveTab] = useState('admin')
+  const [pendingRequests, setPendingRequests] = useState([])
+  const [viewRequest, setViewRequest] = useState(null)
 
   async function load() {
-    const res = await client.get('/api/users')
-    setUsers(res)
+    const [userData, requestsData] = await Promise.all([
+      client.get('/api/users'),
+      client.get('/api/role-requests/pending').catch(() => [])
+    ])
+    setUsers(userData)
+    setPendingRequests(requestsData)
   }
   useEffect(() => { load() }, [])
+
+  async function handleApprove(id) {
+    if (window.confirm('Approve this role request?')) {
+      await client.post(`/api/role-requests/${id}/approve`)
+      await load()
+    }
+  }
+
+  async function handleReject(id) {
+    if (window.confirm('Reject this role request?')) {
+      await client.post(`/api/role-requests/${id}/reject`)
+      await load()
+    }
+  }
 
   async function createUser(e) {
     e.preventDefault()
@@ -24,10 +44,53 @@ export default function UsersPage() {
       ...form,
       roles: form.roles
     })
-    setForm({ username:'', email:'', password:'', isActive:true, roles: [] })
+    setForm({ username: '', email: '', password: '', isActive: true, roles: [] })
     setShowCreate(false)
     await load()
   }
+
+  const renderRequestsTable = () => (
+    <div className="panel">
+      <div className="panel-header">
+        <h2 className="section-title">Pending Role Requests ({pendingRequests.length})</h2>
+      </div>
+      {pendingRequests.length > 0 ? (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>User Account</th>
+                <th>Requested Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingRequests.map(req => (
+                <tr key={req.id}>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{req.user.username}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{req.user.email}</div>
+                  </td>
+                  <td><span className={`badge badge-${req.requestedRole === 'ADMIN' ? 'primary' : 'info'}`}>{req.requestedRole}</span></td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-outline btn-small" onClick={() => setViewRequest(req)}>View Details</button>
+                      <button className="btn btn-success btn-small" onClick={() => handleApprove(req.id)}>Approve</button>
+                      <button className="btn btn-danger btn-small" onClick={() => handleReject(req.id)}>Reject</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          No pending role requests
+        </div>
+      )}
+    </div>
+  );
 
   // Group users by roles
   const groupedUsers = {
@@ -39,11 +102,12 @@ export default function UsersPage() {
   };
 
   const tabs = [
-    { id: 'users', label: 'Users', count: groupedUsers.users.length, color: 'secondary' },
     { id: 'admin', label: 'Administrators', count: groupedUsers.admin.length, color: 'primary' },
     { id: 'procurement', label: 'Procurement', count: groupedUsers.procurement.length, color: 'info' },
     { id: 'finance', label: 'Finance', count: groupedUsers.finance.length, color: 'warning' },
-    { id: 'vendor', label: 'Vendors', count: groupedUsers.vendor.length, color: 'success' }
+    { id: 'vendor', label: 'Vendors', count: groupedUsers.vendor.length, color: 'success' },
+    { id: 'users', label: 'No Role', count: groupedUsers.users.length, color: 'secondary' },
+    { id: 'requests', label: 'Pending Requests', count: pendingRequests.length, color: 'danger' }
   ];
 
   const renderUserTable = (usersList) => (
@@ -73,7 +137,7 @@ export default function UsersPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button className="btn btn-outline btn-small" onClick={() => setEdit({ ...u, password: '' })}>Edit</button>
-                      <button className="btn btn-outline btn-small" style={{ color: 'var(--danger)' }} onClick={async () => { if(window.confirm('Delete user?')) { await client.del(`/api/users/${u.id}`); await load() } }}>Delete</button>
+                      <button className="btn btn-outline btn-small" style={{ color: 'var(--danger)' }} onClick={async () => { if (window.confirm('Delete user?')) { await client.del(`/api/users/${u.id}`); await load() } }}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -97,10 +161,10 @@ export default function UsersPage() {
       </header>
 
       {/* Tab Navigation */}
-      <div className="tabs-container" style={{ 
-        display: 'flex', 
-        gap: '4px', 
-        marginBottom: '20px', 
+      <div className="tabs-container" style={{
+        display: 'flex',
+        gap: '4px',
+        marginBottom: '20px',
         borderBottom: '2px solid var(--border-color)',
         paddingBottom: '0'
       }}>
@@ -120,7 +184,7 @@ export default function UsersPage() {
               transition: 'all 0.2s ease',
               position: 'relative',
               top: '2px',
-              fontSize:'15px'
+              fontSize: '15px'
             }}
           >
             {tab.label} ({tab.count})
@@ -130,16 +194,16 @@ export default function UsersPage() {
 
       {/* Tab Content */}
       <div className="tab-content">
-        {renderUserTable(groupedUsers[activeTab])}
+        {activeTab === 'requests' ? renderRequestsTable() : renderUserTable(groupedUsers[activeTab])}
       </div>
 
       <Modal open={showCreate} title="Create New User" onClose={() => setShowCreate(false)}>
         <form className="form-grid" onSubmit={createUser}>
-          <label className="form-label"><span>Username</span><input className="form-input" value={form.username} onChange={e=>setForm({...form,username:e.target.value})} required /></label>
-          <label className="form-label"><span>Email</span><input className="form-input" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required /></label>
-          <label className="form-label"><span>Password</span><input className="form-input" type="password" value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required /></label>
+          <label className="form-label"><span>Username</span><input className="form-input" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required /></label>
+          <label className="form-label"><span>Email</span><input className="form-input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required /></label>
+          <label className="form-label"><span>Password</span><input className="form-input" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></label>
           <label className="form-label"><span>Active Status</span>
-            <select className="form-select" value={form.isActive ? 'true':'false'} onChange={e=>setForm({...form,isActive:e.target.value==='true'})}>
+            <select className="form-select" value={form.isActive ? 'true' : 'false'} onChange={e => setForm({ ...form, isActive: e.target.value === 'true' })}>
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
@@ -154,9 +218,9 @@ export default function UsersPage() {
                     checked={form.roles.includes(role)}
                     onChange={e => {
                       if (e.target.checked) {
-                        setForm({...form, roles: [...form.roles, role]});
+                        setForm({ ...form, roles: [...form.roles, role] });
                       } else {
-                        setForm({...form, roles: form.roles.filter(r => r !== role)});
+                        setForm({ ...form, roles: form.roles.filter(r => r !== role) });
                       }
                     }}
                   />
@@ -172,6 +236,60 @@ export default function UsersPage() {
         </form>
       </Modal>
 
+      {viewRequest && (
+        <Modal open={!!viewRequest} title="Request Details" onClose={() => setViewRequest(null)}>
+          <div className="request-details">
+            <div className="section-group">
+              <h3 className="section-subtitle">Account Information</h3>
+              <div className="detail-item"><strong>Username:</strong> {viewRequest.user.username}</div>
+              <div className="detail-item"><strong>Account Email:</strong> {viewRequest.user.email}</div>
+              <div className="detail-item"><strong>Requested Role:</strong> <span className="badge badge-info">{viewRequest.requestedRole}</span></div>
+            </div>
+
+            <div className="section-group" style={{ marginTop: '20px' }}>
+              <h3 className="section-subtitle">Profile Details</h3>
+              <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div className="detail-item"><strong>Full Name:</strong> {viewRequest.fullName}</div>
+                <div className="detail-item"><strong>Contact Email:</strong> {viewRequest.email}</div>
+                <div className="detail-item"><strong>Phone:</strong> {viewRequest.phoneNumber}</div>
+                {viewRequest.requestedRole === 'VENDOR' && (
+                  <>
+                    <div className="detail-item"><strong>Location:</strong> {viewRequest.location}</div>
+                    <div className="detail-item"><strong>Category:</strong> {viewRequest.category}</div>
+                    <div className="detail-item"><strong>GST Number:</strong> {viewRequest.gstNumber}</div>
+                    <div className="detail-item"><strong>Rating:</strong> {viewRequest.rating}</div>
+                    <div className="detail-item" style={{ gridColumn: 'span 2' }}><strong>Address:</strong> {viewRequest.address}</div>
+                  </>
+                )}
+              </div>
+              <div className="detail-item" style={{ marginTop: '10px' }}>
+                <strong>Additional Details:</strong>
+                <p style={{ marginTop: '5px', padding: '10px', backgroundColor: 'var(--panel-bg)', borderRadius: '4px' }}>
+                  {viewRequest.additionalDetails || 'No additional details provided'}
+                </p>
+              </div>
+            </div>
+
+            <div className="section-group" style={{ marginTop: '20px', textAlign: 'center' }}>
+              <a
+                href={`/api/role-requests/document/${viewRequest.id}?token=${token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
+                View Uploaded Document
+              </a>
+            </div>
+
+            <div className="modal-footer" style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn btn-danger" onClick={() => { handleReject(viewRequest.id); setViewRequest(null); }}>Reject</button>
+              <button className="btn btn-success" onClick={() => { handleApprove(viewRequest.id); setViewRequest(null); }}>Approve</button>
+              <button className="btn btn-secondary" onClick={() => setViewRequest(null)}>Close</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {edit && (
         <Modal open={!!edit} title="Edit User" onClose={() => setEdit(null)}>
           <form className="form-grid" onSubmit={async e => {
@@ -183,11 +301,11 @@ export default function UsersPage() {
             setEdit(null)
             await load()
           }}>
-            <label className="form-label"><span>Username</span><input className="form-input" value={edit.username} onChange={e=>setEdit({...edit,username:e.target.value})} required /></label>
-            <label className="form-label"><span>Email</span><input className="form-input" type="email" value={edit.email} onChange={e=>setEdit({...edit,email:e.target.value})} required /></label>
-            <label className="form-label"><span>Password (Leave blank to keep same)</span><input className="form-input" type="password" value={edit.password || ''} onChange={e=>setEdit({...edit,password:e.target.value})} /></label>
+            <label className="form-label"><span>Username</span><input className="form-input" value={edit.username} onChange={e => setEdit({ ...edit, username: e.target.value })} required /></label>
+            <label className="form-label"><span>Email</span><input className="form-input" type="email" value={edit.email} onChange={e => setEdit({ ...edit, email: e.target.value })} required /></label>
+            <label className="form-label"><span>Password (Leave blank to keep same)</span><input className="form-input" type="password" value={edit.password || ''} onChange={e => setEdit({ ...edit, password: e.target.value })} /></label>
             <label className="form-label"><span>Active Status</span>
-              <select className="form-select" value={edit.isActive ? 'true':'false'} onChange={e=>setEdit({...edit,isActive:e.target.value==='true'})}>
+              <select className="form-select" value={edit.isActive ? 'true' : 'false'} onChange={e => setEdit({ ...edit, isActive: e.target.value === 'true' })}>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
               </select>
@@ -202,9 +320,9 @@ export default function UsersPage() {
                       checked={edit.roles?.includes(role) || false}
                       onChange={e => {
                         if (e.target.checked) {
-                          setEdit({...edit, roles: [...(edit.roles || []), role]});
+                          setEdit({ ...edit, roles: [...(edit.roles || []), role] });
                         } else {
-                          setEdit({...edit, roles: (edit.roles || []).filter(r => r !== role)});
+                          setEdit({ ...edit, roles: (edit.roles || []).filter(r => r !== role) });
                         }
                       }}
                     />

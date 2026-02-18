@@ -1,6 +1,9 @@
 export function createClient(getToken) {
   async function request(path, options = {}) {
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    if (options.headers && 'Content-Type' in options.headers && options.headers['Content-Type'] === undefined) {
+      delete headers['Content-Type'];
+    }
     const token = getToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -28,6 +31,11 @@ export function createClient(getToken) {
 
   return {
     post: (p, b) => request(p, { method: 'POST', body: JSON.stringify(b) }),
+    postFormData: (p, body) => request(p, {
+      method: 'POST',
+      body,
+      headers: { 'Content-Type': undefined } // Fetch will set correctly for FormData
+    }),
     put: (p, b) => request(p, { method: 'PUT', body: JSON.stringify(b) }),
     get: (p) => request(p, { method: 'GET' }),
     del: (p) => request(p, { method: 'DELETE' })

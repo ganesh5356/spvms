@@ -1,0 +1,78 @@
+================================================================================
+SMART VENDOR MANAGEMENT SYSTEM (SPVMS) - TECHNICAL DOCUMENTATION
+================================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+The Smart Vendor Management System (SPVMS) is a full-stack application designed 
+to manage procurement processes, including vendor onboarding, purchase 
+requisitions, and purchase orders. It provides a centralized platform for
+organizations to handle their procurement lifecycle efficiently.
+
+2. SYSTEM ARCHITECTURE
+----------------------
+The application follows a standard Client-Server architecture:
+- Backend: RESTful API built with Java Spring Boot.
+- Frontend: Single Page Application (SPA) built with React.js using Vite.
+- Database: Relational database management using MySQL.
+
+3. CORE MODULES & FUNCTIONALITIES
+---------------------------------
+
+A. AUTHENTICATION & SECURITY
+   - Implements JWT (JSON Web Token) for stateless authentication.
+   - Secure login and registration processes.
+   - Resource-level authorization using Spring Security.
+   - Deactivated account detection and login blocking with clear user feedback.
+
+B. VENDOR MANAGEMENT
+   - Create, Read, Update, and Delete (CRUD) operations for vendor records.
+   - Tracks vendor details like name, contact information, and performance ratings.
+   - Search and filtering capabilities for efficient vendor lookup.
+   - Professional "Premium" onboarding workflow for prospective vendors.
+
+C. PURCHASE REQUISITIONS (PR)
+   - Allows users to create requests for purchasing goods or services.
+   - Tracking status of requisitions through various workflow stages.
+
+D. PURCHASE ORDERS (PO)
+   - Converts approved requisitions into Purchase Orders.
+   - Integrates with JasperReports to generate professional PO documents.
+   - Supports export to PDF and Excel formats.
+
+E. REPORTING & ANALYTICS
+   - Automated report generation for daily and weekly activities.
+   - Email integration for distributing reports to key management personnel.
+   - Historical logging of report generation and delivery.
+
+F. SYSTEM GUIDANCE & SUPPORT (AI CHATBOT)
+   - Persistent "Help Us" sticky chatbot assistant.
+   - Project-specific knowledge base for workflows (VOD, PR, PO, Roles).
+   - Smart fallback logic for out-of-scope queries.
+
+4. TECHNICAL SPECIFICATIONS
+---------------------------
+- Language: Java 17
+- Framework: Spring Boot 4.0.0
+- Persistence: Hibernate/JPA
+- Database Migration: Flyway
+- Frontend: React 18, React Router, Vite, CSS3
+- API Documentation: Swagger/OpenAPI (SpringDoc)
+- UI/UX: Premium Centered Layouts, Glassmorphism, Micro-animations
+
+5. CONFIGURATION DETAILS
+------------------------
+- Server Port: 8082
+- Frontend Port: 5173 (Default Vite)
+- Database URL: jdbc:mysql://localhost:3306/spvms
+- Email SMTP: smtp.gmail.com (Port 587)
+
+6. TROUBLESHOOTING
+------------------
+- Authentication Failed (Email): Ensure the Google App Password is correct.
+- 500 Internal Error (Reports): Check if MySQL service is running and the database 'spvms' exists.
+- Reports Loop: Verify the scheduler cron expressions in the service layer.
+
+================================================================================
+DOCUMENT END
+================================================================================

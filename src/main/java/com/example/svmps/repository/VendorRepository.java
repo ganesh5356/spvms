@@ -1,7 +1,7 @@
 package com.example.svmps.repository;
 
 import java.util.List;
-import java.util.Optional; // 🔥 THIS WAS MISSING
+import java.util.Optional; //  THIS WAS MISSING
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -18,6 +18,6 @@ public interface VendorRepository
         // Used to map JWT username → vendor
         Optional<Vendor> findByEmail(String email);
 
-        // 🔥 NEW: Find vendor by linked User ID
+        // NEW: Find vendor by linked User ID
         Optional<Vendor> findByUserId(Long userId);
 }

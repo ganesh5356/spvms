@@ -14,4 +14,8 @@ public class SvmpsApplication {
 		SpringApplication.run(SvmpsApplication.class, args);
 	}
 
+	@jakarta.annotation.PostConstruct
+	public void init() {
+		java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
+	}
 }

@@ -4,8 +4,12 @@ spring:
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
-  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      resolve-lazily: true
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -52,3 +56,8 @@ springdoc:
 
 server:
   port: 8082
+  tomcat:
+    max-swallow-size: -1
+    max-http-form-post-size: 10MB
+    max-parameter-count: 100
+    max-part-count: 100

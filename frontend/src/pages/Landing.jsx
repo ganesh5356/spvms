@@ -34,8 +34,8 @@ export default function Landing() {
           <div className="stat-label">Full Procurement Coverage</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number">3+</div>
-          <div className="stat-label">GST Types (CGST, SGST, IGST)</div>
+          <div className="stat-number">Secure</div>
+          <div className="stat-label">JWT Managed Access</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">Real-time</div>
@@ -53,7 +53,7 @@ export default function Landing() {
           <div className="feature-card">
             <div className="feature-icon">🏢</div>
             <h3>Vendor Management</h3>
-            <p>Create vendors, update details, soft delete, and search by rating, location, category, and compliance.</p>
+            <p>Create vendors, update details, soft delete, and search by rating, location, and category.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">📋</div>
@@ -83,7 +83,7 @@ export default function Landing() {
           </p>
           <div className="steps">
             <div className="step"><span className="step-num">1</span><span>Register / Login (JWT)</span></div>
-            <div className="step"><span className="step-num">2</span><span>Add vendors & compliance info</span></div>
+            <div className="step"><span className="step-num">2</span><span>Onboard vendors & manage profiles</span></div>
             <div className="step"><span className="step-num">3</span><span>Create PR, submit, review history</span></div>
             <div className="step"><span className="step-num">4</span><span>Create PO, deliver, close</span></div>
           </div>

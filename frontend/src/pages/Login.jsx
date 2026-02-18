@@ -44,7 +44,7 @@ export default function Login({ initialTab = 'login' }) {
     if (!rEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.email = 'Invalid email format'
     if (!rPassword.trim()) errors.password = 'Password is required'
     if (rPassword.length < 6) errors.password = 'Password must be at least 6 characters'
-    
+
     return errors
   }
 
@@ -60,7 +60,7 @@ export default function Login({ initialTab = 'login' }) {
     try {
       const res = await client.post('/auth/login', { username, password })
       login(res)
-      
+
       // 🔥 Redirect logic based on roles
       const payload = JSON.parse(atob(res.token.split('.')[1]))
       const roles = payload.roles || []
@@ -70,7 +70,8 @@ export default function Login({ initialTab = 'login' }) {
         nav('/app')
       }
     } catch (err) {
-      setError((err.data && err.data.message) || 'Invalid credentials')
+      const msg = err.data?.message || (typeof err.data === 'string' ? err.data : 'Invalid credentials')
+      setError(msg)
     }
   }
 
@@ -90,7 +91,7 @@ export default function Login({ initialTab = 'login' }) {
         email: rEmail,
         password: rPassword
       }
-      
+
       await client.post('/auth/register', payload)
       setRSuccess('Account created. Please sign in.')
       setUsername(rUsername)
@@ -111,13 +112,13 @@ export default function Login({ initialTab = 'login' }) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <button 
-          onClick={() => nav('/')} 
-          style={{ 
-            marginBottom: 16, 
-            background: 'none', 
-            border: 'none', 
-            color: 'var(--text-muted)', 
+        <button
+          onClick={() => nav('/')}
+          style={{
+            marginBottom: 16,
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
             fontSize: '13px',
             display: 'flex',
@@ -131,7 +132,7 @@ export default function Login({ initialTab = 'login' }) {
           <h1 className="auth-title">SVPMS</h1>
           <p className="auth-subtitle">Supplier & Procurement System</p>
         </div>
-        
+
         <nav className="tabs" style={{ marginBottom: 24 }}>
           <button className={`tab ${tab === 'login' ? 'active' : ''}`} onClick={() => switchTab('login')}>Sign In</button>
           <button className={`tab ${tab === 'register' ? 'active' : ''}`} onClick={() => switchTab('register')}>Join Us</button>
@@ -141,12 +142,12 @@ export default function Login({ initialTab = 'login' }) {
           <form className="form-grid" style={{ gridTemplateColumns: '1fr' }} onSubmit={onSubmit}>
             <label className="form-label">
               <span>Username</span>
-              <input className="form-input" value={username} onChange={e => setUsername(e.target.value)} style={{borderColor: fieldErrors.username ? 'var(--danger)' : ''}} required />
+              <input className="form-input" value={username} onChange={e => setUsername(e.target.value)} style={{ borderColor: fieldErrors.username ? 'var(--danger)' : '' }} required />
               {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
             </label>
             <label className="form-label">
               <span>Password</span>
-              <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} style={{borderColor: fieldErrors.password ? 'var(--danger)' : ''}} required />
+              <input className="form-input" type="password" value={password} onChange={e => setPassword(e.target.value)} style={{ borderColor: fieldErrors.password ? 'var(--danger)' : '' }} required />
               {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
             </label>
             <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Sign In</button>
@@ -158,27 +159,27 @@ export default function Login({ initialTab = 'login' }) {
           <form className="form-grid" style={{ gridTemplateColumns: '1fr' }} onSubmit={onRegister}>
             <label className="form-label">
               <span>Username</span>
-              <input className="form-input" value={rUsername} onChange={e => setRUsername(e.target.value)} style={{borderColor: rFieldErrors.username ? 'var(--danger)' : ''}} required />
+              <input className="form-input" value={rUsername} onChange={e => setRUsername(e.target.value)} style={{ borderColor: rFieldErrors.username ? 'var(--danger)' : '' }} required />
               {rFieldErrors.username && <span className="field-error">{rFieldErrors.username}</span>}
             </label>
             <label className="form-label">
               <span>Email</span>
-              <input className="form-input" type="email" value={rEmail} onChange={e => setREmail(e.target.value)} style={{borderColor: rFieldErrors.email ? 'var(--danger)' : ''}} required />
+              <input className="form-input" type="email" value={rEmail} onChange={e => setREmail(e.target.value)} style={{ borderColor: rFieldErrors.email ? 'var(--danger)' : '' }} required />
               {rFieldErrors.email && <span className="field-error">{rFieldErrors.email}</span>}
             </label>
             <label className="form-label">
               <span>Password</span>
-              <input className="form-input" type="password" value={rPassword} onChange={e => setRPassword(e.target.value)} style={{borderColor: rFieldErrors.password ? 'var(--danger)' : ''}} required />
+              <input className="form-input" type="password" value={rPassword} onChange={e => setRPassword(e.target.value)} style={{ borderColor: rFieldErrors.password ? 'var(--danger)' : '' }} required />
               {rFieldErrors.password && <span className="field-error">{rFieldErrors.password}</span>}
             </label>
-            
+
 
             <button type="submit" className="btn btn-primary" style={{ marginTop: 8 }}>Create Account</button>
             {rError && <div className="error-banner">{rError}</div>}
             {rSuccess && <div className="success-banner">{rSuccess}</div>}
           </form>
         )}
-        
+
         <div style={{ marginTop: 24, textAlign: 'center' }}>
           <a href={swaggerUrl} className="nav-link" style={{ fontSize: 12 }} target="_blank" rel="noreferrer">Developer API Documentation</a>
         </div>

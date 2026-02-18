@@ -10,6 +10,8 @@ import POPage from './pages/po/POPage.jsx'
 import UsersPage from './pages/users/UsersPage.jsx'
 import VendorProfile from './pages/vendors/VendorProfile.jsx'
 import VendorPO from './pages/vendors/VendorPO.jsx'
+import RoleSelectionPage from './pages/RoleSelectionPage.jsx'
+import ChatBot from './components/ChatBot.jsx'
 
 function Sidebar() {
   const { hasRole, logout } = useAuth()
@@ -34,7 +36,7 @@ function Sidebar() {
             <span className="sidebar-link-icon">📊</span> Dashboard
           </NavLink>
         )}
-        
+
         {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
           <NavLink to="/app/vendors" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <span className="sidebar-link-icon">🏢</span> Vendors
@@ -127,7 +129,8 @@ function RoleRoute({ roles = [], children }) {
 }
 
 function DashboardWrapper() {
-  const { hasRole } = useAuth()
+  const { roles, hasRole } = useAuth()
+  if (roles.length === 0) return <Navigate to="/app/select-role" replace />
   if (hasRole('VENDOR')) return <Navigate to="/app/my-profile" replace />
   return <Dashboard />
 }
@@ -145,6 +148,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <DashboardWrapper />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/app/select-role"
+          element={
+            <PrivateRoute>
+              <RoleSelectionPage />
             </PrivateRoute>
           }
         />
@@ -214,6 +226,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ChatBot />
     </AuthProvider>
   )
 }

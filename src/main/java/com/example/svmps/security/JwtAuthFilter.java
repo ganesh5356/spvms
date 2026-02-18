@@ -32,11 +32,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
+        String token = null;
 
         if (header != null && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        } else {
+            // Check for token in query parameter (useful for document view in new tab)
+            token = request.getParameter("token");
+        }
 
-            String token = header.substring(7);
-
+        if (token != null) {
             // 1️⃣ Extract username
             String username = jwtUtil.extractUsername(token);
 
@@ -44,18 +49,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             List<String> roles = jwtUtil.extractRoles(token);
 
             // 3️⃣ Convert roles → GrantedAuthority (ROLE_ prefix REQUIRED)
-            List<SimpleGrantedAuthority> authorities =
-                    roles.stream()
-                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                         .collect(Collectors.toList());
+            List<SimpleGrantedAuthority> authorities = roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toList());
 
             // 4️⃣ Set authentication with authorities
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            authorities
-                    );
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    username,
+                    null,
+                    authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

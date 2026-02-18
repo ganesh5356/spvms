@@ -11,8 +11,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     vendors: 0,
     prs: 0,
-    pos: 0,
-    posWithAllGst: 0
+    pos: 0
   })
 
   useEffect(() => {
@@ -24,19 +23,10 @@ export default function Dashboard() {
           client.get('/api/po').catch(() => [])
         ])
 
-        const posWithAllGstCount = Array.isArray(poRes)
-          ? poRes.filter(po =>
-              po.cgstAmount > 0 &&
-              po.sgstAmount > 0 &&
-              po.igstAmount > 0
-            ).length
-          : 0
-
         setStats({
           vendors: vendorRes?.length || 0,
           prs: prRes?.length || 0,
-          pos: poRes?.length || 0,
-          posWithAllGst: posWithAllGstCount
+          pos: poRes?.length || 0
         })
       } catch (err) {
         console.error('Failed to load stats', err)
@@ -53,29 +43,23 @@ export default function Dashboard() {
       </header>
 
       <div className="dashboard-stats">
-        <StatCard 
-          label="Total Vendors" 
-          value={stats.vendors} 
-          icon="🏢" 
-          onClick={() => navigate('/app/vendors')} 
+        <StatCard
+          label="Total Vendors"
+          value={stats.vendors}
+          icon="🏢"
+          onClick={() => navigate('/app/vendors')}
         />
-        <StatCard 
-          label="Purchase Requisitions" 
-          value={stats.prs} 
-          icon="📋" 
-          onClick={() => navigate('/app/pr')} 
+        <StatCard
+          label="Purchase Requisitions"
+          value={stats.prs}
+          icon="📋"
+          onClick={() => navigate('/app/pr')}
         />
-        <StatCard 
-          label="Purchase Orders" 
-          value={stats.pos} 
-          icon="📦" 
-          onClick={() => navigate('/app/po')} 
-        />
-        <StatCard 
-          label="GST Compliant POs" 
-          value={stats.posWithAllGst} 
-          icon="🛡️" 
-          onClick={() => navigate('/app/po')} 
+        <StatCard
+          label="Purchase Orders"
+          value={stats.pos}
+          icon="📦"
+          onClick={() => navigate('/app/po')}
         />
       </div>
 
