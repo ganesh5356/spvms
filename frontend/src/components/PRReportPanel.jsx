@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { downloadWithAuth } from "../api/reportApi.js";
 
-const BASE_URL = "http://localhost:8082/api/reports";
+const BASE_URL = "/api/reports";
 
 export default function PRReportPanel() {
   const [id, setId] = useState("");
