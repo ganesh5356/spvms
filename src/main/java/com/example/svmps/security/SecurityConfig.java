@@ -16,90 +16,89 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
-@EnableMethodSecurity   //  REQUIRED FOR @PreAuthorize
+@EnableMethodSecurity // REQUIRED FOR @PreAuthorize
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+        private final JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
-        this.jwtAuthFilter = jwtAuthFilter;
-    }
-    
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+                this.jwtAuthFilter = jwtAuthFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+        @Bean
+        public BCryptPasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-        http
-            // ENABLE CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http)
+                        throws Exception {
 
-            //  DISABLE CSRF (JWT BASED)
-            .csrf(csrf -> csrf.disable())
+                http
+                                // ENABLE CORS
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            .authorizeHttpRequests(auth -> auth
+                                // DISABLE CSRF (JWT BASED)
+                                .csrf(csrf -> csrf.disable())
 
-                //  PREFLIGHT
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .authorizeHttpRequests(auth -> auth
 
-                //  PUBLIC ENDPOINTS
-                .requestMatchers(
-                        "/auth/**",
+                                                // PREFLIGHT
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Swagger
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/api-docs/**"
-                ).permitAll()
+                                                // PUBLIC ENDPOINTS (Permit Landing Page & Assets)
+                                                .requestMatchers(
+                                                                "/",
+                                                                "/index.html",
+                                                                "/static/**",
+                                                                "/assets/**",
+                                                                "/*.ico",
+                                                                "/*.png",
+                                                                "/*.svg",
+                                                                "/auth/**",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**",
+                                                                "/api-docs/**")
+                                                .permitAll()
 
-                //  EVERYTHING ELSE NEEDS JWT
-                .anyRequest().authenticated()
-            )
+                                                // EVERYTHING ELSE NEEDS JWT
+                                                .anyRequest().authenticated())
 
-            //  JWT FILTER
-            .addFilterBefore(
-                    jwtAuthFilter,
-                    UsernamePasswordAuthenticationFilter.class
-            );
+                                // JWT FILTER
+                                .addFilterBefore(
+                                                jwtAuthFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    // ✅ CORS CONFIGURATION
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+        // ✅ CORS CONFIGURATION
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration config = new CorsConfiguration();
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173"
-        ));
+                config.setAllowedOriginPatterns(List.of(
+                                "http://localhost:5173",
+                                "https://*.railway.app"));
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
+                config.setAllowedHeaders(List.of(
+                                "Authorization",
+                                "Content-Type"));
 
-        config.setExposedHeaders(List.of(
-                "Content-Disposition"
-        ));
+                config.setExposedHeaders(List.of(
+                                "Content-Disposition"));
 
-        config.setAllowCredentials(true);
+                config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", config);
+                source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
+                return source;
+        }
 }
