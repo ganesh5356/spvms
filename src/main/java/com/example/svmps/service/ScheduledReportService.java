@@ -38,14 +38,14 @@ public class ScheduledReportService {
         this.vendorService = vendorService;
     }
 
-    // 🔁 DAILY – every 2 minutes
-    @Scheduled(cron = "0 */2 * * * ?")
+    // 🔁 DAILY (Modified to every 6 months to save memory)
+    @Scheduled(cron = "0 0 0 1 1,7 *")
     public void dailyReport() {
         processReport(null, ReportType.DAILY);
     }
 
-    // 🔁 WEEKLY – every 5 minutes
-    @Scheduled(cron = "0 */5 * * * ?")
+    // 🔁 WEEKLY (Modified to every year to save memory)
+    @Scheduled(cron = "0 0 0 1 1 *")
     public void weeklyReport() {
         processReport(null, ReportType.WEEKLY);
     }

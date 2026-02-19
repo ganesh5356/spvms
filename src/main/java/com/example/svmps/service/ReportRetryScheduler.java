@@ -22,7 +22,7 @@ public class ReportRetryScheduler {
         this.service = service;
     }
 
-    @Scheduled(fixedDelay = 120000)
+    @Scheduled(fixedDelay = 3600000) // Retry every 1 hour
     public void retryFailedReports() {
 
         List<ReportLog> failed = repo.findByStatusAndRetryCountLessThanOrderByGeneratedAtDesc(

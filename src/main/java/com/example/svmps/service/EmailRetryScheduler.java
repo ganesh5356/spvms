@@ -21,7 +21,7 @@ public class EmailRetryScheduler {
         this.emailService = emailService;
     }
 
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 7200000) // Retry every 2 hours
     public void retryFailedEmails() {
 
         List<EmailLog> failed = repo.findByStatusAndRetryCountLessThan(
