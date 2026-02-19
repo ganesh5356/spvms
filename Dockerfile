@@ -18,11 +18,17 @@ WORKDIR /app
 # Copy the JAR from the build stage
 COPY --from=build /app/target/svmps-0.0.1-SNAPSHOT.jar app.jar
 
-# Install libfontconfig1 (CRITICAL for JasperReports on Linux)
-RUN apt-get update && apt-get install -y libfontconfig1 && rm -rf /var/lib/apt/lists/*
+# Install fontconfig and fonts (CRITICAL for JasperReports on Linux)
+RUN apt-get update && apt-get install -y \
+    libfontconfig1 \
+    fontconfig \
+    fontconfig-config \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 
 # Expose the port (Railway uses PORT env var)
 EXPOSE 8080
 
 # Start the application with optimized memory limits
-ENTRYPOINT ["java", "-Xms128m", "-Xmx384m", "-XX:MaxMetaspaceSize=128m", "-jar", "app.jar", "--server.port=${PORT:-8080}"]
+# We use sh -c to ensure environment variables like ${PORT} are evaluated
+ENTRYPOINT ["sh", "-c", "java -Xms128m -Xmx384m -XX:MaxMetaspaceSize=128m -jar app.jar --server.port=${PORT:-8080}"]

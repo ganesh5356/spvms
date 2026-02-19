@@ -51,12 +51,14 @@ public class RoleRequestService {
 
         System.out.println("Submitting role request for user: " + user.getUsername() + ", role: " + roleName);
 
-        // Validate file type
+        // Validate file type (allowing PNG, JPG, JPEG)
         String contentType = file.getContentType();
         System.out.println("File content type: " + contentType);
         if (contentType == null
-                || (!contentType.equalsIgnoreCase("image/jpeg") && !contentType.equalsIgnoreCase("image/jpg"))) {
-            throw new IllegalArgumentException("Only JPG format is allowed. Received: " + contentType);
+                || (!contentType.equalsIgnoreCase("image/jpeg")
+                        && !contentType.equalsIgnoreCase("image/jpg")
+                        && !contentType.equalsIgnoreCase("image/png"))) {
+            throw new IllegalArgumentException("Only JPG, JPEG or PNG format is allowed. Received: " + contentType);
         }
 
         try {

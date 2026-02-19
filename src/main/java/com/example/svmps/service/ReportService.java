@@ -19,8 +19,13 @@ public class ReportService {
     private JasperPrint prepareReport(String reportName, List<?> data) {
 
         try {
+            System.out.println("DEBUG: Preparing report: " + reportName);
             InputStream jrxml = getClass().getResourceAsStream("/reports/" + reportName + ".jrxml");
+            if (jrxml == null) {
+                throw new RuntimeException("JRXML file not found: /reports/" + reportName + ".jrxml");
+            }
 
+            System.out.println("DEBUG: Compiling report: " + reportName);
             JasperReport report = JasperCompileManager.compileReport(jrxml);
 
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(data);
@@ -31,15 +36,20 @@ public class ReportService {
             // Handle logo safely
             java.net.URL logoUrl = getClass().getResource("/static/logo.png");
             if (logoUrl != null) {
+                System.out.println("DEBUG: Logo found at: " + logoUrl);
                 params.put("LOGO_PATH", logoUrl.toString());
             } else {
+                System.out.println("DEBUG: Logo NOT found in classpath /static/logo.png");
                 params.put("LOGO_PATH", ""); // Empty string if not found
             }
 
+            System.out.println("DEBUG: Filling report: " + reportName);
             return JasperFillManager.fillReport(report, params, dataSource);
 
         } catch (Exception e) {
-            throw new RuntimeException("Report generation failed", e);
+            System.err.println("CRITICAL: Report rendering failed for " + reportName + ". Error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Report generation failed: " + e.getMessage(), e);
         }
     }
 
