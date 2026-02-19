@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:${MYSQL_URL:jdbc:mysql://${MYSQLHOST:localhost}:${MYSQLPORT:3306}/${MYSQLDATABASE:spvms}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}}
-    username: ${SPRING_DATASOURCE_USERNAME:${MYSQLUSER:RAILWAY_DIAGNOSTIC_USER}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${MYSQLPASSWORD:RAILWAY_DIAGNOSTIC_PASS}}
+    url: jdbc:mysql://${MYSQLHOST:localhost}:${MYSQLPORT:3306}/${MYSQLDATABASE:spvms}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${SPRING_DATASOURCE_USERNAME:${MYSQLUSER:root}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${MYSQLPASSWORD:root}}
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
