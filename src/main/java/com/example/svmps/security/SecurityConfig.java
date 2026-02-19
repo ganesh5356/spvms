@@ -41,12 +41,21 @@ public class SecurityConfig {
                                 // DISABLE CSRF (JWT BASED)
                                 .csrf(csrf -> csrf.disable())
 
+                                // STATELESS SESSION
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(
+                                                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+
+                                // DISABLE DEFAULTS
+                                .formLogin(form -> form.disable())
+                                .httpBasic(basic -> basic.disable())
+
                                 .authorizeHttpRequests(auth -> auth
 
                                                 // PREFLIGHT
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                                                // PUBLIC ENDPOINTS (Permit Landing Page & Assets)
+                                                // PUBLIC ENDPOINTS
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/index.html",
@@ -55,6 +64,7 @@ public class SecurityConfig {
                                                                 "/*.ico",
                                                                 "/*.png",
                                                                 "/*.svg",
+                                                                "/error", // Permit Error Path
                                                                 "/auth/**",
                                                                 "/swagger-ui/**",
                                                                 "/swagger-ui.html",

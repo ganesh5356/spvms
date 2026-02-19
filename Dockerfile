@@ -24,5 +24,5 @@ RUN apt-get update && apt-get install -y libfontconfig1 && rm -rf /var/lib/apt/l
 # Expose the port (Railway uses PORT env var)
 EXPOSE 8080
 
-# Start the application with memory limits
-ENTRYPOINT ["java", "-Xmx300m", "-XX:MaxMetaspaceSize=150m", "-jar", "app.jar", "--server.port=${PORT:-8080}"]
+# Start the application with optimized memory limits
+ENTRYPOINT ["java", "-Xms128m", "-Xmx384m", "-XX:MaxMetaspaceSize=128m", "-jar", "app.jar", "--server.port=${PORT:-8080}"]

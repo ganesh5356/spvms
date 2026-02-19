@@ -42,24 +42,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         if (token != null) {
-            // 1️⃣ Extract username
-            String username = jwtUtil.extractUsername(token);
+            try {
+                // 1️⃣ Extract username
+                String username = jwtUtil.extractUsername(token);
 
-            // 2️⃣ Extract roles from JWT
-            List<String> roles = jwtUtil.extractRoles(token);
+                // 2️⃣ Extract roles from JWT
+                List<String> roles = jwtUtil.extractRoles(token);
 
-            // 3️⃣ Convert roles → GrantedAuthority (ROLE_ prefix REQUIRED)
-            List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                    .collect(Collectors.toList());
+                // 3️⃣ Convert roles → GrantedAuthority (ROLE_ prefix REQUIRED)
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .collect(Collectors.toList());
 
-            // 4️⃣ Set authentication with authorities
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    username,
-                    null,
-                    authorities);
+                // 4️⃣ Set authentication with authorities
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                // Ignore invalid tokens for public paths; SecurityConfig will block non-public
+                // paths later
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);
