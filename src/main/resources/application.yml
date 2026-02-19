@@ -25,24 +25,12 @@ spring:
     baseline-on-migrate: true
     out-of-order: true
     validate-on-migrate: false
-
-  mail:
-    host: smtp.gmail.com
-    port: 465
-    username: ${MAIL_USERNAME:saxena.juhee8@gmail.com}
-    password: ${MAIL_PASSWORD:aniyguscverdmsku}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: false
-          ssl:
-            enable: true
-            trust: "*"
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+# Transactional Email via Resend
+resend:
+  api:
+    key: ${RESEND_API_KEY:re_placeholder}
+  from:
+    email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
 
 # Root-level properties (0 indentation)
 app:
