@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class EmailService {
@@ -135,7 +134,7 @@ public class EmailService {
         for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
             resendAttachments.add(Attachment.builder()
                     .fileName(entry.getKey())
-                    .content(entry.getValue())
+                    .content(java.util.Base64.getEncoder().encodeToString(entry.getValue()))
                     .build());
         }
 
