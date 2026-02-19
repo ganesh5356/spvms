@@ -25,6 +25,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <flyway.version>10.11.0</flyway.version>
     </properties>
 
     <!-- ================= Dependencies ================= -->
@@ -104,16 +105,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-flyway</artifactId>
-            <version>3.3.5</version>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- Flyway MySQL Support -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
-            <version>10.11.0</version>
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- MySQL Driver -->
@@ -180,7 +181,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>11.18.0</version>
+                <version>${flyway.version}</version>
                 <configuration>
                     <url>jdbc:mysql://localhost:3306/spvms_db</url>
                     <user>spvms_user</user>
