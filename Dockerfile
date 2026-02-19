@@ -1,5 +1,5 @@
 # Build Stage (Backend + Frontend)
-FROM maven:3.8.5-openjdk-17 AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy the entire project
@@ -9,7 +9,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # Run Stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 WORKDIR /app
 
 # Copy the JAR from the build stage
