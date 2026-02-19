@@ -13,85 +13,99 @@ import VendorPO from './pages/vendors/VendorPO.jsx'
 import RoleSelectionPage from './pages/RoleSelectionPage.jsx'
 import ChatBot from './components/ChatBot.jsx'
 
-function Sidebar() {
+function Sidebar({ isOpen, onClose }) {
   const { hasRole, logout } = useAuth()
   const nav = useNavigate()
 
   const handleLogout = () => {
     logout()
     nav('/')
+    if (onClose) onClose()
+  }
+
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768 && onClose) {
+      onClose()
+    }
   }
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <Link to="/app" className="sidebar-brand">
-          <span className="sidebar-logo">SVPMS</span>
-          <span className="sidebar-subtitle">Supplier & Procurement</span>
-        </Link>
-      </div>
-      <nav className="sidebar-nav">
-        {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
-          <NavLink to="/app" end className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">📊</span> Dashboard
-          </NavLink>
-        )}
+    <>
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <Link to="/app" className="sidebar-brand" onClick={handleLinkClick}>
+            <span className="sidebar-logo">SVPMS</span>
+            <span className="sidebar-subtitle">Supplier & Procurement</span>
+          </Link>
+          <button className="sidebar-close-mobile" onClick={onClose}>✕</button>
+        </div>
+        <nav className="sidebar-nav">
+          {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
+            <NavLink to="/app" end className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">📊</span> Dashboard
+            </NavLink>
+          )}
 
-        {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
-          <NavLink to="/app/vendors" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">🏢</span> Vendors
-          </NavLink>
-        )}
+          {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
+            <NavLink to="/app/vendors" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">🏢</span> Vendors
+            </NavLink>
+          )}
 
-        {hasRole('VENDOR') && (
-          <NavLink to="/app/my-profile" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">👤</span> My Profile
-          </NavLink>
-        )}
+          {hasRole('VENDOR') && (
+            <NavLink to="/app/my-profile" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">👤</span> My Profile
+            </NavLink>
+          )}
 
-        {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
-          <NavLink to="/app/pr" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">📋</span> Requisitions
-          </NavLink>
-        )}
+          {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
+            <NavLink to="/app/pr" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">📋</span> Requisitions
+            </NavLink>
+          )}
 
-        {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
-          <NavLink to="/app/po" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">📦</span> Purchase Orders
-          </NavLink>
-        )}
+          {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
+            <NavLink to="/app/po" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">📦</span> Purchase Orders
+            </NavLink>
+          )}
 
-        {hasRole('VENDOR') && (
-          <NavLink to="/app/my-orders" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">🚚</span> My Orders
-          </NavLink>
-        )}
+          {hasRole('VENDOR') && (
+            <NavLink to="/app/my-orders" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">🚚</span> My Orders
+            </NavLink>
+          )}
 
-        {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
-          <NavLink to="/app/reports" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">📈</span> Reports
-          </NavLink>
-        )}
+          {(hasRole('ADMIN') || hasRole('PROCUREMENT') || hasRole('FINANCE')) && (
+            <NavLink to="/app/reports" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">📈</span> Reports
+            </NavLink>
+          )}
 
-        {hasRole('ADMIN') && (
-          <NavLink to="/app/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <span className="sidebar-link-icon">👥</span> User Management
-          </NavLink>
-        )}
-      </nav>
-      <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          <span className="sidebar-link-icon">🚪</span> Logout
-        </button>
-      </div>
-    </aside>
+          {hasRole('ADMIN') && (
+            <NavLink to="/app/users" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={handleLinkClick}>
+              <span className="sidebar-link-icon">👥</span> User Management
+            </NavLink>
+          )}
+        </nav>
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={handleLogout}>
+            <span className="sidebar-link-icon">🚪</span> Logout
+          </button>
+        </div>
+      </aside>
+      {isOpen && <div className="sidebar-overlay" onClick={onClose}></div>}
+    </>
   )
 }
 
-function TopBar() {
+function TopBar({ onToggleSidebar }) {
   const { roles } = useAuth()
   return (
     <div className="top-bar">
+      <button className="sidebar-toggle" onClick={onToggleSidebar}>
+        ☰
+      </button>
       <div className="user-profile">
         <span className="user-role-badge badge badge-info">{roles[0]}</span>
         <div className="user-avatar">U</div>
@@ -101,11 +115,16 @@ function TopBar() {
 }
 
 function AppLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  const closeSidebar = () => setSidebarOpen(false)
+
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
       <div className="main-wrapper">
-        <TopBar />
+        <TopBar onToggleSidebar={toggleSidebar} />
         <main className="content-area">
           {children}
         </main>
