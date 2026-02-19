@@ -1,4 +1,4 @@
-CREATE TABLE approval_history (
+CREATE TABLE IF NOT EXISTS approval_history (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
 
     pr_id BIGINT NOT NULL,
