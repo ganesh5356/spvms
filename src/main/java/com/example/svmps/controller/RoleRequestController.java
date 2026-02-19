@@ -4,8 +4,8 @@ import com.example.svmps.entity.RoleSelectionRequest;
 import com.example.svmps.entity.User;
 import com.example.svmps.repository.UserRepository;
 import com.example.svmps.service.RoleRequestService;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+
+import com.example.svmps.entity.UploadedDocument;
 
 @RestController
 @RequestMapping("/api/role-requests")
@@ -121,13 +121,18 @@ public class RoleRequestController {
         RoleSelectionRequest request = requestRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Request not found"));
 
-        Path path = Paths.get(request.getDocumentPath());
-        Resource resource = new UrlResource(path.toUri());
+        UploadedDocument doc = request.getDocument();
+        if (doc == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        ByteArrayResource resource = new ByteArrayResource(doc.getData());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + path.getFileName().toString() + "\"")
-                .contentType(MediaType.IMAGE_JPEG)
+                        "attachment; filename=\"" + doc.getFilename() + "\"")
+                .contentType(MediaType.parseMediaType(doc.getContentType()))
+                .contentLength(doc.getData().length)
                 .body(resource);
     }
 }

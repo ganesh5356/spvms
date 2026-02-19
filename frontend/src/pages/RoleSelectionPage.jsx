@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext.jsx'
 import { createClient } from '../api/client.js'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 
 export default function RoleSelectionPage() {
-    const { token, logout } = useAuth()
+    const { token, logout, roles } = useAuth()
     const client = createClient(() => token)
+
+    // Redirect if already has roles
+    if (roles && roles.length > 0) {
+        return <Navigate to="/app" replace />;
+    }
 
     const [selectedRole, setSelectedRole] = useState('')
     const [formData, setFormData] = useState({
@@ -23,6 +28,7 @@ export default function RoleSelectionPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [myRequest, setMyRequest] = useState(null)
+    const [fieldErrors, setFieldErrors] = useState({})
 
     useEffect(() => {
         async function checkMyRequest() {
@@ -41,34 +47,39 @@ export default function RoleSelectionPage() {
     const handleChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
+        // Clear field error when user starts typing
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => ({ ...prev, [name]: '' }))
+        }
     }
 
     const validateForm = () => {
-        if (!formData.fullName.trim()) return 'Full Name is required';
-        if (!formData.email.trim()) return 'Email is required';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+        const errors = {}
+        if (!formData.fullName.trim()) errors.fullName = 'Full Name is required';
+        if (!formData.email.trim()) errors.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Invalid email format';
 
         // India 10-digit mobile number validation
-        if (!formData.phone.trim()) return 'Phone Number is required';
-        if (!/^[6-9]\d{9}$/.test(formData.phone)) return 'Phone number must be a valid 10-digit Indian mobile number (e.g., 9876543210)';
+        if (!formData.phone.trim()) errors.phone = 'Phone Number is required';
+        else if (!/^[6-9]\d{9}$/.test(formData.phone)) errors.phone = 'Use a valid 10-digit Indian mobile number';
 
         if (selectedRole === 'VENDOR') {
-            if (!formData.location.trim() || formData.location.length < 2) return 'Location must be at least 2 characters';
-            if (!formData.category.trim() || formData.category.length < 2) return 'Category must be at least 2 characters';
-            if (!formData.address.trim() || formData.address.length < 5) return 'Address must be at least 5 characters';
+            if (!formData.location.trim()) errors.location = 'Location is required';
+            if (!formData.category.trim()) errors.category = 'Category is required';
+            if (!formData.address.trim()) errors.address = 'Address is required';
 
             // Indian GST validation
             const gstPattern = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-            if (!formData.gstNumber.trim()) return 'GST Number is required';
-            if (!gstPattern.test(formData.gstNumber)) return 'Invalid GST number format (e.g., 29ABCDE1234F1Z5)';
+            if (!formData.gstNumber.trim()) errors.gstNumber = 'GST Number is required';
+            else if (!gstPattern.test(formData.gstNumber)) errors.gstNumber = 'Invalid GST format (e.g., 29ABCDE1234F1Z5)';
 
             const r = parseFloat(formData.rating);
-            if (isNaN(r) || r < 1.0 || r > 5.0) return 'Rating must be between 1.0 and 5.0';
+            if (isNaN(r) || r < 1.0 || r > 5.0) errors.rating = 'Rating must be between 1.0 and 5.0';
         }
 
-        if (!file) return 'Please upload the required document';
+        if (!file) errors.file = 'Please upload the required document';
 
-        return null;
+        return errors;
     }
 
     const handleSubmit = async (e) => {
@@ -79,14 +90,16 @@ export default function RoleSelectionPage() {
             return;
         }
 
-        const validationError = validateForm();
-        if (validationError) {
-            setError(validationError);
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            setError('Please correct the highlighted errors.');
             return;
         }
 
         setLoading(true)
         setError('')
+        setFieldErrors({})
 
         const data = new FormData()
         data.append('role', selectedRole || '')
@@ -153,42 +166,28 @@ export default function RoleSelectionPage() {
             }}>
                 <div style={{
                     background: 'linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%)',
-                    padding: '40px 30px',
+                    padding: 'clamp(24px, 5vw, 40px)',
                     color: 'white',
                     textAlign: 'center',
                     position: 'relative'
                 }}>
-                    <button onClick={() => setSelectedRole('')} style={{
-                        position: 'absolute',
-                        left: '24px',
-                        top: '24px',
-                        background: 'rgba(255,255,255,0.15)',
-                        border: 'none',
-                        color: 'white',
-                        padding: '8px 16px',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.2s'
-                    }}>← Change Role</button>
+                    <button onClick={() => { setSelectedRole(''); setFieldErrors({}); }} className="back-button">← Change Role</button>
 
-                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>
+                    <div style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', marginBottom: '16px' }}>
                         {selectedRole === 'ADMIN' && '🛡️'}
                         {selectedRole === 'PROCUREMENT' && '🛒'}
                         {selectedRole === 'FINANCE' && '💰'}
                         {selectedRole === 'VENDOR' && '🏢'}
                     </div>
-                    <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px', color: 'white' }}>
+                    <h2 style={{ margin: 0, fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 800, letterSpacing: '-0.5px', color: 'white' }}>
                         {selectedRole} Application Profile
                     </h2>
-                    <p style={{ margin: '12px 0 0', opacity: 0.9, fontSize: '1rem' }}>
+                    <p style={{ margin: '12px 0 0', opacity: 0.9, fontSize: 'clamp(0.9rem, 3vw, 1rem)' }}>
                         Provide your professional credentials for verification.
                     </p>
                 </div>
 
-                <div style={{ padding: '40px' }}>
+                <div className="form-content-wrapper" style={{ padding: 'clamp(20px, 5vw, 40px)' }}>
                     <form onSubmit={handleSubmit}>
                         {/* SECTION 1: Personal & Contact */}
                         <div style={{ marginBottom: '40px' }}>
@@ -197,18 +196,22 @@ export default function RoleSelectionPage() {
                                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Contact Information</h3>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                            <div className="responsive-grid">
                                 <div className="form-group">
-                                    <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Full Legal Name</label>
-                                    <input type="text" name="fullName" className="form-control" placeholder="e.g. John Doe" value={formData.fullName} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                    <label className="field-label">Full Legal Name</label>
+                                    <input type="text" name="fullName" className={`form-control ${fieldErrors.fullName ? 'is-invalid' : ''}`} placeholder="e.g. John Doe" value={formData.fullName} onChange={handleChange} required />
+                                    {fieldErrors.fullName && <span className="field-error">{fieldErrors.fullName}</span>}
                                 </div>
                                 <div className="form-group">
-                                    <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Professional Email</label>
-                                    <input type="email" name="email" className="form-control" placeholder="john.doe@company.com" value={formData.email} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                    <label className="field-label">Professional Email</label>
+                                    <input type="email" name="email" className={`form-control ${fieldErrors.email ? 'is-invalid' : ''}`} placeholder="john.doe@company.com" value={formData.email} onChange={handleChange} required />
+                                    {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
                                 </div>
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Active Mobile Number</label>
-                                    <input type="text" name="phone" className="form-control" placeholder="+91 XXXXX XXXXX" value={formData.phone} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                <div className="form-group full-width">
+                                    <label className="field-label">Active Mobile Number</label>
+                                    <input type="text" name="phone" className={`form-control ${fieldErrors.phone ? 'is-invalid' : ''}`} placeholder="9876543210" value={formData.phone} onChange={handleChange} required />
+                                    {fieldErrors.phone && <span className="field-error">{fieldErrors.phone}</span>}
+                                    <small style={{ color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>10-digit Indian mobile number</small>
                                 </div>
                             </div>
                         </div>
@@ -220,26 +223,31 @@ export default function RoleSelectionPage() {
                                     <span style={{ fontSize: '1.4rem' }}>🏬</span>
                                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Organization Credentials</h3>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                                <div className="responsive-grid">
                                     <div className="form-group">
-                                        <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>GST Identification Number</label>
-                                        <input type="text" name="gstNumber" className="form-control" placeholder="29XXXXX1234F1Z5" value={formData.gstNumber} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                        <label className="field-label">GST Identification Number</label>
+                                        <input type="text" name="gstNumber" className={`form-control ${fieldErrors.gstNumber ? 'is-invalid' : ''}`} placeholder="29XXXXX1234F1Z5" value={formData.gstNumber} onChange={handleChange} required />
+                                        {fieldErrors.gstNumber && <span className="field-error">{fieldErrors.gstNumber}</span>}
                                     </div>
                                     <div className="form-group">
-                                        <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Industry Category</label>
-                                        <input type="text" name="category" className="form-control" placeholder="e.g. Technology Solutions" value={formData.category} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                        <label className="field-label">Industry Category</label>
+                                        <input type="text" name="category" className={`form-control ${fieldErrors.category ? 'is-invalid' : ''}`} placeholder="e.g. Technology Solutions" value={formData.category} onChange={handleChange} required />
+                                        {fieldErrors.category && <span className="field-error">{fieldErrors.category}</span>}
                                     </div>
                                     <div className="form-group">
-                                        <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Corporate Location</label>
-                                        <input type="text" name="location" className="form-control" placeholder="City, State" value={formData.location} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                        <label className="field-label">Corporate Location</label>
+                                        <input type="text" name="location" className={`form-control ${fieldErrors.location ? 'is-invalid' : ''}`} placeholder="City, State" value={formData.location} onChange={handleChange} required />
+                                        {fieldErrors.location && <span className="field-error">{fieldErrors.location}</span>}
                                     </div>
                                     <div className="form-group">
-                                        <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Vendor Trust Rating (1-5)</label>
-                                        <input type="number" step="0.1" min="1" max="5" name="rating" className="form-control" value={formData.rating} onChange={handleChange} required style={{ borderRadius: '12px', padding: '12px' }} />
+                                        <label className="field-label">Vendor Trust Rating (1-5)</label>
+                                        <input type="number" step="0.1" min="1" max="5" name="rating" className={`form-control ${fieldErrors.rating ? 'is-invalid' : ''}`} value={formData.rating} onChange={handleChange} required />
+                                        {fieldErrors.rating && <span className="field-error">{fieldErrors.rating}</span>}
                                     </div>
-                                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Registered Business Address</label>
-                                        <textarea name="address" className="form-control" placeholder="Complete office or factory address..." value={formData.address} onChange={handleChange} required rows="3" style={{ borderRadius: '12px', padding: '12px', resize: 'none' }}></textarea>
+                                    <div className="form-group full-width">
+                                        <label className="field-label">Registered Business Address</label>
+                                        <textarea name="address" className={`form-control ${fieldErrors.address ? 'is-invalid' : ''}`} placeholder="Complete office or factory address..." value={formData.address} onChange={handleChange} required rows="4" style={{ minHeight: '120px' }}></textarea>
+                                        {fieldErrors.address && <span className="field-error">{fieldErrors.address}</span>}
                                     </div>
                                 </div>
                             </div>
@@ -252,14 +260,15 @@ export default function RoleSelectionPage() {
                                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Compliance Documentation</h3>
                             </div>
                             <div style={{
-                                padding: '30px',
-                                border: '2px dashed #e5e7eb',
+                                padding: 'clamp(20px, 5vw, 30px)',
+                                border: fieldErrors.file ? '2px dashed var(--danger)' : '2px dashed #e5e7eb',
                                 borderRadius: '16px',
                                 textAlign: 'center',
                                 backgroundColor: '#f9fafb'
                             }}>
                                 <label style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', marginBottom: '16px' }}>{documentLabel}</label>
-                                <input type="file" className="form-control" accept=".jpg,.jpeg" onChange={(e) => setFile(e.target.files[0])} required />
+                                <input type="file" className="form-control" accept=".jpg,.jpeg" onChange={(e) => { setFile(e.target.files[0]); if (fieldErrors.file) setFieldErrors(prev => ({ ...prev, file: '' })); }} required />
+                                {fieldErrors.file && <span className="field-error" style={{ marginTop: '8px' }}>{fieldErrors.file}</span>}
                                 {file && <p style={{ marginTop: '12px', color: 'var(--success)', fontWeight: 600 }}>✓ {file.name} attached.</p>}
                             </div>
                         </div>
@@ -270,7 +279,7 @@ export default function RoleSelectionPage() {
                                 <span style={{ fontSize: '1.4rem' }}>ℹ️</span>
                                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>Additional Context</h3>
                             </div>
-                            <textarea name="details" className="form-control" placeholder="Any additional notes for the reviewers..." value={formData.details} onChange={handleChange} rows="2" style={{ borderRadius: '12px', padding: '12px', resize: 'none' }}></textarea>
+                            <textarea name="details" className="form-control" placeholder="Any additional notes for the reviewers..." value={formData.details} onChange={handleChange} rows="3" style={{ minHeight: '100px' }}></textarea>
                         </div>
 
                         {error && (
@@ -280,14 +289,7 @@ export default function RoleSelectionPage() {
                         )}
 
                         <div style={{ display: 'flex', gap: '16px' }}>
-                            <button type="submit" className="btn btn-primary" disabled={loading} style={{
-                                padding: '16px 40px',
-                                borderRadius: '12px',
-                                fontWeight: 700,
-                                fontSize: '1rem',
-                                flex: 1,
-                                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-                            }}>
+                            <button type="submit" className="submit-btn" disabled={loading}>
                                 {loading ? 'Processing Application...' : 'Submit Profile for Verification'}
                             </button>
                         </div>
@@ -313,6 +315,30 @@ export default function RoleSelectionPage() {
                                 To begin, please select your professional designation within the procurement ecosystem.
                             </p>
                         </header>
+
+                        {myRequest && myRequest.status === 'REJECTED' && (
+                            <div className="alert alert-danger animate-fade-in" style={{
+                                maxWidth: '800px',
+                                margin: '0 auto 40px',
+                                borderRadius: '16px',
+                                padding: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '15px',
+                                backgroundColor: '#fff1f2',
+                                border: '1px solid #fecaca',
+                                color: '#991b1b',
+                                boxShadow: '0 4px 12px rgba(220, 38, 38, 0.05)'
+                            }}>
+                                <span style={{ fontSize: '1.5rem' }}>🚫</span>
+                                <div>
+                                    <div style={{ fontWeight: 700, marginBottom: '4px' }}>Previous Application Rejected</div>
+                                    <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                                        Your request for the <strong>{myRequest.requestedRole}</strong> role was not approved. Please review your details and re-apply, or select a different role.
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px' }}>
                             {[
@@ -367,10 +393,100 @@ export default function RoleSelectionPage() {
                     border-color: var(--primary) !important;
                     box-shadow: 0 20px 40px rgba(37, 99, 235, 0.1) !important;
                 }
+                .form-control {
+                    width: 100%;
+                    padding: 14px 18px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 14px;
+                    font-size: 1rem;
+                    color: var(--text-main);
+                    transition: all 0.2s ease;
+                    background: #f9fafb;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+                }
                 .form-control:focus {
                     border-color: var(--primary) !important;
                     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+                    background: white;
                     outline: none;
+                }
+                .form-control.is-invalid {
+                    border-color: var(--danger) !important;
+                    background-color: #fff1f2;
+                }
+                .back-button {
+                    position: absolute;
+                    left: 24px;
+                    top: 24px;
+                    background: rgba(255,255,255,0.15);
+                    border: none;
+                    color: white;
+                    padding: 8px 16px;
+                    borderRadius: 12px;
+                    cursor: pointer;
+                    fontSize: 0.85rem;
+                    fontWeight: 600;
+                    backdrop-filter: blur(10px);
+                    transition: all 0.2s;
+                }
+                .back-button:hover {
+                    background: rgba(255,255,255,0.25);
+                }
+                .responsive-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 24px;
+                }
+                .field-label {
+                    fontWeight: 600;
+                    fontSize: 0.85rem;
+                    color: var(--text-muted);
+                    marginBottom: 8px;
+                    display: block;
+                    textTransform: uppercase;
+                }
+                .full-width {
+                    grid-column: span 2;
+                }
+                .submit-btn {
+                    padding: 16px 40px;
+                    border-radius: 12px;
+                    font-weight: 700;
+                    font-size: 1rem;
+                    flex: 1;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .submit-btn:hover:not(:disabled) {
+                    background: #4338ca;
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+                }
+                .submit-btn:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+
+                @media (max-width: 640px) {
+                    .responsive-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .full-width {
+                        grid-column: span 1;
+                    }
+                    .back-button {
+                        padding: 6px 12px;
+                        font-size: 0.8rem;
+                        top: 16px;
+                        left: 16px;
+                    }
+                    .role-selection-wrapper {
+                        padding: 20px 10px !important;
+                    }
                 }
                 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
             `}</style>

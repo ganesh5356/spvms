@@ -1,5 +1,6 @@
 package com.example.svmps.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,6 +10,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "roles")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Role {
 
     @Id
@@ -21,7 +23,8 @@ public class Role {
     @Column(length = 255)
     private String description;
 
-    public Role() {}
+    public Role() {
+    }
 
     public Role(String name) {
         this.name = name;

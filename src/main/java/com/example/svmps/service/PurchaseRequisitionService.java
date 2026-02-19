@@ -286,6 +286,8 @@ public class PurchaseRequisitionService {
         dto.setVendorId(pr.getVendor().getId());
         dto.setStatus(pr.getStatus());
         dto.setTotalAmount(pr.getTotalAmount());
+        dto.setVendorName(pr.getVendor().getName());
+        dto.setVendorIsActive(pr.getVendor().getIsActive());
 
         try {
             dto.setItems(mapper.readValue(pr.getItemsJson(), List.class));

@@ -32,19 +32,25 @@ public class VendorService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final com.example.svmps.repository.ApprovalHistoryRepository approvalHistoryRepository;
+    private final com.example.svmps.repository.RoleSelectionRequestRepository roleRequestRepository;
 
     public VendorService(
             VendorRepository vendorRepository,
             PurchaseRequisitionRepository purchaseRequisitionRepository,
             PurchaseOrderRepository purchaseOrderRepository,
             UserRepository userRepository,
-            RoleRepository roleRepository) {
+            RoleRepository roleRepository,
+            com.example.svmps.repository.ApprovalHistoryRepository approvalHistoryRepository,
+            com.example.svmps.repository.RoleSelectionRequestRepository roleRequestRepository) {
 
         this.vendorRepository = vendorRepository;
         this.purchaseRequisitionRepository = purchaseRequisitionRepository;
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.approvalHistoryRepository = approvalHistoryRepository;
+        this.roleRequestRepository = roleRequestRepository;
     }
 
     // ================= CREATE =================
@@ -157,13 +163,20 @@ public class VendorService {
     }
 
     // ================= SOFT DELETE =================
+    @Transactional
     public void softDeleteVendor(Long id) {
-
         Vendor v = vendorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));
 
         v.setIsActive(false);
         vendorRepository.save(v);
+
+        // 🔥 Sync Soft Delete: Also deactivate linked user
+        if (v.getUser() != null) {
+            User linkedUser = v.getUser();
+            linkedUser.setIsActive(false);
+            userRepository.save(linkedUser);
+        }
     }
 
     // ================= HARD DELETE (ADMIN ONLY) =================
@@ -177,8 +190,11 @@ public class VendorService {
         // 1. Clean up dependencies and delete vendor
         deleteVendorOnly(id);
 
-        // 2. ALSO DELETE THE LINKED USER
+        // 2. ALSO DELETE THE LINKED USER AND THEIR DEPENDENCIES
         if (linkedUser != null) {
+            // Clean up role requests for this user first
+            roleRequestRepository.deleteAllByUser(linkedUser);
+            // Finally delete user
             userRepository.delete(linkedUser);
         }
     }
@@ -193,12 +209,19 @@ public class VendorService {
         Vendor v = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new RuntimeException("Vendor not found: " + vendorId));
 
-        // 1. Find and Delete associated Purchase Requisitions and their Purchase Orders
+        // 1. Find and Delete associated Purchase Requisitions, their Purchase Orders,
+        // and Approval History
         List<PurchaseRequisition> prs = purchaseRequisitionRepository.findByVendorId(vendorId);
         for (PurchaseRequisition pr : prs) {
+            // Cleanup POs
             List<PurchaseOrder> pos = purchaseOrderRepository.findByPrId(pr.getId());
             if (!pos.isEmpty()) {
                 purchaseOrderRepository.deleteAll(pos);
+            }
+            // Cleanup Approval History
+            List<com.example.svmps.entity.ApprovalHistory> history = approvalHistoryRepository.findByPrId(pr.getId());
+            if (!history.isEmpty()) {
+                approvalHistoryRepository.deleteAll(history);
             }
         }
         if (!prs.isEmpty()) {

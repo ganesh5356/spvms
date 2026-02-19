@@ -304,6 +304,14 @@ public class PurchaseOrderService {
         int remaining = po.getTotalQuantity() - po.getDeliveredQuantity();
         dto.setRemainingQuantity(remaining);
 
+        // 🔥 Sync Vendor Info from PR
+        prRepo.findById(po.getPrId()).ifPresent(pr -> {
+            if (pr.getVendor() != null) {
+                dto.setVendorName(pr.getVendor().getName());
+                dto.setVendorIsActive(pr.getVendor().getIsActive());
+            }
+        });
+
         return dto;
     }
 }

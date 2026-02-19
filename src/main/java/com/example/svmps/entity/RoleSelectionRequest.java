@@ -1,17 +1,19 @@
 package com.example.svmps.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "role_selection_requests")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class RoleSelectionRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -37,8 +39,9 @@ public class RoleSelectionRequest {
     @Column(columnDefinition = "TEXT")
     private String additionalDetails;
 
-    @Column(nullable = false)
-    private String documentPath;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_id")
+    private UploadedDocument document;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -159,12 +162,12 @@ public class RoleSelectionRequest {
         this.additionalDetails = additionalDetails;
     }
 
-    public String getDocumentPath() {
-        return documentPath;
+    public UploadedDocument getDocument() {
+        return document;
     }
 
-    public void setDocumentPath(String documentPath) {
-        this.documentPath = documentPath;
+    public void setDocument(UploadedDocument document) {
+        this.document = document;
     }
 
     public RequestStatus getStatus() {

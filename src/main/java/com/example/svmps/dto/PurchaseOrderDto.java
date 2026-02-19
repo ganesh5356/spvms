@@ -25,56 +25,159 @@ public class PurchaseOrderDto {
     private Integer deliveredQuantity;
     private Integer remainingQuantity;
     private BigDecimal balanceAmount;
+    private String vendorName;
+    private Boolean vendorIsActive;
 
     // ===== GETTERS & SETTERS =====
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getPrId() { return prId; }
-    public void setPrId(Long prId) { this.prId = prId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPoNumber() { return poNumber; }
-    public void setPoNumber(String poNumber) { this.poNumber = poNumber; }
+    public String getVendorName() {
+        return vendorName;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
+    }
 
-    public BigDecimal getBaseAmount() { return baseAmount; }
-    public void setBaseAmount(BigDecimal baseAmount) { this.baseAmount = baseAmount; }
+    public Boolean getVendorIsActive() {
+        return vendorIsActive;
+    }
 
-    public BigDecimal getCgstPercent() { return cgstPercent; }
-    public void setCgstPercent(BigDecimal cgstPercent) { this.cgstPercent = cgstPercent; }
+    public void setVendorIsActive(Boolean vendorIsActive) {
+        this.vendorIsActive = vendorIsActive;
+    }
 
-    public BigDecimal getSgstPercent() { return sgstPercent; }
-    public void setSgstPercent(BigDecimal sgstPercent) { this.sgstPercent = sgstPercent; }
+    public Long getPrId() {
+        return prId;
+    }
 
-    public BigDecimal getIgstPercent() { return igstPercent; }
-    public void setIgstPercent(BigDecimal igstPercent) { this.igstPercent = igstPercent; }
+    public void setPrId(Long prId) {
+        this.prId = prId;
+    }
 
-    public BigDecimal getCgstAmount() { return cgstAmount; }
-    public void setCgstAmount(BigDecimal cgstAmount) { this.cgstAmount = cgstAmount; }
+    public String getPoNumber() {
+        return poNumber;
+    }
 
-    public BigDecimal getSgstAmount() { return sgstAmount; }
-    public void setSgstAmount(BigDecimal sgstAmount) { this.sgstAmount = sgstAmount; }
+    public void setPoNumber(String poNumber) {
+        this.poNumber = poNumber;
+    }
 
-    public BigDecimal getIgstAmount() { return igstAmount; }
-    public void setIgstAmount(BigDecimal igstAmount) { this.igstAmount = igstAmount; }
+    public String getStatus() {
+        return status;
+    }
 
-    public BigDecimal getTotalGstAmount() { return totalGstAmount; }
-    public void setTotalGstAmount(BigDecimal totalGstAmount) { this.totalGstAmount = totalGstAmount; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+    public BigDecimal getBaseAmount() {
+        return baseAmount;
+    }
 
-    public Integer getTotalQuantity() { return totalQuantity; }
-    public void setTotalQuantity(Integer totalQuantity) { this.totalQuantity = totalQuantity; }
+    public void setBaseAmount(BigDecimal baseAmount) {
+        this.baseAmount = baseAmount;
+    }
 
-    public Integer getDeliveredQuantity() { return deliveredQuantity; }
-    public void setDeliveredQuantity(Integer deliveredQuantity) { this.deliveredQuantity = deliveredQuantity; }
+    public BigDecimal getCgstPercent() {
+        return cgstPercent;
+    }
 
-    public Integer getRemainingQuantity() { return remainingQuantity; }
-    public void setRemainingQuantity(Integer remainingQuantity) { this.remainingQuantity = remainingQuantity; }
+    public void setCgstPercent(BigDecimal cgstPercent) {
+        this.cgstPercent = cgstPercent;
+    }
 
-    public BigDecimal getBalanceAmount() { return balanceAmount; }
-    public void setBalanceAmount(BigDecimal balanceAmount) { this.balanceAmount = balanceAmount; }
+    public BigDecimal getSgstPercent() {
+        return sgstPercent;
+    }
+
+    public void setSgstPercent(BigDecimal sgstPercent) {
+        this.sgstPercent = sgstPercent;
+    }
+
+    public BigDecimal getIgstPercent() {
+        return igstPercent;
+    }
+
+    public void setIgstPercent(BigDecimal igstPercent) {
+        this.igstPercent = igstPercent;
+    }
+
+    public BigDecimal getCgstAmount() {
+        return cgstAmount;
+    }
+
+    public void setCgstAmount(BigDecimal cgstAmount) {
+        this.cgstAmount = cgstAmount;
+    }
+
+    public BigDecimal getSgstAmount() {
+        return sgstAmount;
+    }
+
+    public void setSgstAmount(BigDecimal sgstAmount) {
+        this.sgstAmount = sgstAmount;
+    }
+
+    public BigDecimal getIgstAmount() {
+        return igstAmount;
+    }
+
+    public void setIgstAmount(BigDecimal igstAmount) {
+        this.igstAmount = igstAmount;
+    }
+
+    public BigDecimal getTotalGstAmount() {
+        return totalGstAmount;
+    }
+
+    public void setTotalGstAmount(BigDecimal totalGstAmount) {
+        this.totalGstAmount = totalGstAmount;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public Integer getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public void setTotalQuantity(Integer totalQuantity) {
+        this.totalQuantity = totalQuantity;
+    }
+
+    public Integer getDeliveredQuantity() {
+        return deliveredQuantity;
+    }
+
+    public void setDeliveredQuantity(Integer deliveredQuantity) {
+        this.deliveredQuantity = deliveredQuantity;
+    }
+
+    public Integer getRemainingQuantity() {
+        return remainingQuantity;
+    }
+
+    public void setRemainingQuantity(Integer remainingQuantity) {
+        this.remainingQuantity = remainingQuantity;
+    }
+
+    public BigDecimal getBalanceAmount() {
+        return balanceAmount;
+    }
+
+    public void setBalanceAmount(BigDecimal balanceAmount) {
+        this.balanceAmount = balanceAmount;
+    }
 }

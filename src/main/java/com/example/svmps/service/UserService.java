@@ -25,15 +25,19 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final VendorRepository vendorRepository;
-    private final VendorService vendorService; // 🔥 NEW dependency
+    private final VendorService vendorService;
+    private final com.example.svmps.repository.RoleSelectionRequestRepository roleRequestRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, RoleRepository roleRepository, VendorRepository vendorRepository,
-            VendorService vendorService, BCryptPasswordEncoder passwordEncoder) {
+            VendorService vendorService,
+            com.example.svmps.repository.RoleSelectionRequestRepository roleRequestRepository,
+            BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.vendorRepository = vendorRepository;
         this.vendorService = vendorService;
+        this.roleRequestRepository = roleRequestRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -143,14 +147,19 @@ public class UserService {
         return toDto(saved);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteUser(Long id) {
         User u = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // 🔥 Cleanup associated Vendor profile if it exists
+        // 1. Cleanup associated Vendor profile if it exists
         vendorRepository.findByUserId(u.getId()).ifPresent(v -> {
             vendorService.deleteVendorOnly(v.getId());
         });
 
+        // 2. Cleanup Role Requests
+        roleRequestRepository.deleteAllByUser(u);
+
+        // 3. Delete the user
         userRepository.delete(u);
     }
 

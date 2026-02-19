@@ -13,4 +13,6 @@ public interface RoleSelectionRequestRepository extends JpaRepository<RoleSelect
     List<RoleSelectionRequest> findByStatus(RoleSelectionRequest.RequestStatus status);
 
     Optional<RoleSelectionRequest> findFirstByUserOrderByCreatedAtDesc(User user);
+
+    void deleteAllByUser(User user);
 }

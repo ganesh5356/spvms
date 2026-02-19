@@ -68,7 +68,8 @@ export default function PRPage() {
     // Fetch active vendors for dropdown
     try {
       const vList = await client.get('/api/vendors')
-      setVendors(vList)
+      // Filter for active vendors to prevent selection of soft-deleted ones
+      setVendors((vList || []).filter(v => v.isActive))
     } catch (err) {
       console.error('Failed to fetch vendors', err)
     }
@@ -202,7 +203,7 @@ export default function PRPage() {
                 <th>Requester</th>
                 <th>PR Number</th>
                 <th>Status</th>
-                <th>Vendor ID</th>
+                <th>Vendor</th>
                 <th>Total</th>
                 <th>Actions</th>
               </tr>
@@ -215,13 +216,16 @@ export default function PRPage() {
                   <td><div style={{ fontWeight: 600 }}>{pr.prNumber}</div></td>
                   <td>
                     <span className={`badge ${pr.status === 'APPROVED' ? 'badge-success' :
-                        pr.status === 'REJECTED' ? 'badge-danger' :
-                          pr.status === 'SUBMITTED' ? 'badge-info' : 'badge-warning'
+                      pr.status === 'REJECTED' ? 'badge-danger' :
+                        pr.status === 'SUBMITTED' ? 'badge-info' : 'badge-warning'
                       }`}>
                       {pr.status}
                     </span>
                   </td>
-                  <td>{pr.vendorId}</td>
+                  <td>
+                    <div>{pr.vendorName}</div>
+                    {!pr.vendorIsActive && <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>Inactive</span>}
+                  </td>
                   <td>{pr.totalAmount?.toFixed(2)}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '8px' }}>

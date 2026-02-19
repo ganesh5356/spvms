@@ -11,19 +11,23 @@ public class PurchaseRequisitionDto {
     private Long id;
     private String prNumber; // AUTO-GENERATED
 
-
-
     @NotNull
     private Long vendorId;
 
     private String requesterEmail;
-    public String getRequesterEmail() { return requesterEmail; }
-    public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
 
+    public String getRequesterEmail() {
+        return requesterEmail;
+    }
 
+    public void setRequesterEmail(String requesterEmail) {
+        this.requesterEmail = requesterEmail;
+    }
 
     private String status;
     private BigDecimal totalAmount;
+    private String vendorName;
+    private Boolean vendorIsActive;
 
     private String comments;
 
@@ -35,7 +39,6 @@ public class PurchaseRequisitionDto {
 
     @NotNull
     private List<@Min(1) BigDecimal> itemAmounts;
-
 
     // ===== GETTERS & SETTERS =====
 
@@ -54,8 +57,6 @@ public class PurchaseRequisitionDto {
     public void setPrNumber(String prNumber) {
         this.prNumber = prNumber;
     }
-
-
 
     public Long getVendorId() {
         return vendorId;
@@ -111,5 +112,21 @@ public class PurchaseRequisitionDto {
 
     public void setItemAmounts(List<BigDecimal> itemAmounts) {
         this.itemAmounts = itemAmounts;
+    }
+
+    public String getVendorName() {
+        return vendorName;
+    }
+
+    public void setVendorName(String vendorName) {
+        this.vendorName = vendorName;
+    }
+
+    public Boolean getVendorIsActive() {
+        return vendorIsActive;
+    }
+
+    public void setVendorIsActive(Boolean vendorIsActive) {
+        this.vendorIsActive = vendorIsActive;
     }
 }

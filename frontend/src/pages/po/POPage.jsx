@@ -138,6 +138,7 @@ export default function POPage({ filter = 'all', onFilterChange }) {
                 <th>ID</th>
                 <th>Number</th>
                 <th>Status</th>
+                <th>Vendor</th>
                 <th>Base Amt</th>
                 <th>Total GST</th>
                 <th>Grand Total</th>
@@ -152,10 +153,14 @@ export default function POPage({ filter = 'all', onFilterChange }) {
                   <td><div style={{ fontWeight: 600 }}>{po.poNumber}</div></td>
                   <td>
                     <span className={`badge ${po.status === 'CLOSED' ? 'badge-success' :
-                        po.status === 'DELIVERED' ? 'badge-info' : 'badge-warning'
+                      po.status === 'DELIVERED' ? 'badge-info' : 'badge-warning'
                       }`}>
                       {po.status}
                     </span>
+                  </td>
+                  <td>
+                    <div>{po.vendorName}</div>
+                    {!po.vendorIsActive && <span className="badge badge-danger" style={{ fontSize: '0.7rem' }}>Inactive</span>}
                   </td>
                   <td>{po.baseAmount?.toFixed(2)}</td>
                   <td>{po.totalGstAmount?.toFixed(2)}</td>
