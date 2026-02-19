@@ -5,8 +5,9 @@ import com.example.svmps.entity.EmailStatus;
 import com.example.svmps.repository.EmailLogRepository;
 import com.resend.Resend;
 import com.resend.services.emails.model.Attachment;
-import com.resend.services.emails.model.SendEmailRequest;
-import com.resend.services.emails.model.SendEmailResponse;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
+import com.resend.core.exception.ResendException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -73,16 +74,20 @@ public class EmailService {
     private void sendEmailInternal(EmailLog log, String from) {
         String fromEmail = (from != null && !from.isBlank()) ? from : defaultFrom;
 
-        SendEmailRequest request = SendEmailRequest.builder()
+        CreateEmailOptions options = CreateEmailOptions.builder()
                 .from(fromEmail)
                 .to(log.getRecipient())
                 .subject(log.getSubject())
                 .html(log.getBody())
                 .build();
 
-        SendEmailResponse response = resend.emails().send(request);
-        if (response == null || response.getId() == null) {
-            throw new RuntimeException("Resend failed to return a valid message ID");
+        try {
+            CreateEmailResponse response = resend.emails().send(options);
+            if (response == null || response.getId() == null) {
+                throw new RuntimeException("Resend failed to return a valid message ID");
+            }
+        } catch (ResendException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -126,14 +131,15 @@ public class EmailService {
     }
 
     private void sendEmailWithAttachmentsInternal(EmailLog log, Map<String, byte[]> attachments) {
-        List<Attachment> resendAttachments = attachments.entrySet().stream()
-                .map(entry -> Attachment.builder()
-                        .fileName(entry.getKey())
-                        .content(entry.getValue())
-                        .build())
-                .collect(Collectors.toList());
+        List<Attachment> resendAttachments = new java.util.ArrayList<>();
+        for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
+            resendAttachments.add(Attachment.builder()
+                    .fileName(entry.getKey())
+                    .content(entry.getValue())
+                    .build());
+        }
 
-        SendEmailRequest request = SendEmailRequest.builder()
+        CreateEmailOptions options = CreateEmailOptions.builder()
                 .from(defaultFrom)
                 .to(log.getRecipient())
                 .subject(log.getSubject())
@@ -141,9 +147,13 @@ public class EmailService {
                 .attachments(resendAttachments)
                 .build();
 
-        SendEmailResponse response = resend.emails().send(request);
-        if (response == null || response.getId() == null) {
-            throw new RuntimeException("Resend failed to return a valid message ID for attachments");
+        try {
+            CreateEmailResponse response = resend.emails().send(options);
+            if (response == null || response.getId() == null) {
+                throw new RuntimeException("Resend failed to return a valid message ID for attachments");
+            }
+        } catch (ResendException e) {
+            throw new RuntimeException(e);
         }
     }
 }
