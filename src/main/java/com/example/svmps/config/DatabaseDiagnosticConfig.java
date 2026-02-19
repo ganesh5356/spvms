@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import java.util.Map;
 
 @Component
 public class DatabaseDiagnosticConfig {
@@ -19,10 +20,25 @@ public class DatabaseDiagnosticConfig {
 
     @PostConstruct
     public void init() {
-        logger.info("--- STARTUP: Database Connection Diagnostic ---");
-        logger.info("Target URL: {}", maskUrl(url));
-        logger.info("Target User: {}", username);
-        logger.info("-----------------------------------------------");
+        logger.info("--- SYSTEM ENVIRONMENT DIAGNOSTIC ---");
+        Map<String, String> env = System.getenv();
+        env.forEach((key, value) -> {
+            if (key.startsWith("MYSQL") || key.startsWith("DATABASE") || key.startsWith("SPRING_DATASOURCE")) {
+                logger.info("Env Var: {} = {}", key, maskValue(key, value));
+            }
+        });
+        logger.info("Final spring.datasource.url = {}", maskUrl(url));
+        logger.info("Final spring.datasource.username = {}", username);
+        logger.info("------------------------------------");
+    }
+
+    private String maskValue(String key, String value) {
+        if (value == null)
+            return "null";
+        if (key.contains("PASSWORD") || key.contains("URL")) {
+            return value.length() > 5 ? value.substring(0, 5) + "****" : "****";
+        }
+        return value;
     }
 
     private String maskUrl(String url) {
@@ -31,7 +47,6 @@ public class DatabaseDiagnosticConfig {
         if (!url.contains("@"))
             return url;
         try {
-            // Mask password in jdbc:mysql://user:pass@host:port/db format if present
             return url.replaceAll(":[^:@]+@", ":****@");
         } catch (Exception e) {
             return "MASK_ERROR";
