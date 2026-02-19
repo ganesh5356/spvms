@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import { Routes, Route, Navigate, NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
 import Login from './pages/Login.jsx'
@@ -115,7 +116,7 @@ function TopBar({ onToggleSidebar }) {
 }
 
 function AppLayout({ children }) {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
   const closeSidebar = () => setSidebarOpen(false)
