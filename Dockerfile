@@ -1,0 +1,25 @@
+# Build Stage (Backend + Frontend)
+FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /app
+
+# Copy the entire project
+COPY . .
+
+# Build the project (This will trigger frontend-maven-plugin automatically)
+RUN mvn clean package -DskipTests
+
+# Run Stage
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+
+# Copy the JAR from the build stage
+COPY --from=build /app/target/svmps-0.0.1-SNAPSHOT.jar app.jar
+
+# Install libfontconfig1 (CRITICAL for JasperReports on Linux)
+RUN apt-get update && apt-get install -y libfontconfig1 && rm -rf /var/lib/apt/lists/*
+
+# Expose the port (Railway uses PORT env var)
+EXPOSE 8080
+
+# Start the application
+ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=${PORT:-8080}"]
