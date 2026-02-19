@@ -179,7 +179,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version> 11.18.0</version>
+                <version>11.18.0</version>
                 <configuration>
                     <url>jdbc:mysql://localhost:3306/spvms_db</url>
                     <user>spvms_user</user>
