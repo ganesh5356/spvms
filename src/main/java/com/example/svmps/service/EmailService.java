@@ -3,33 +3,26 @@ package com.example.svmps.service;
 import com.example.svmps.entity.EmailLog;
 import com.example.svmps.entity.EmailStatus;
 import com.example.svmps.repository.EmailLogRepository;
-import com.resend.Resend;
-import com.resend.services.emails.model.Attachment;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
-import com.resend.core.exception.ResendException;
-import org.springframework.beans.factory.annotation.Value;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
+
+import org.springframework.core.io.ByteArrayResource;
 
 @Service
 public class EmailService {
 
-    private final Resend resend;
+    private final JavaMailSender mailSender;
     private final EmailLogRepository repo;
-    private final String defaultFrom;
 
-    public EmailService(
-            EmailLogRepository repo,
-            @Value("${resend.api.key:re_placeholder}") String apiKey,
-            @Value("${resend.from.email:onboarding@resend.dev}") String defaultFrom) {
-        this.resend = new Resend(apiKey);
+    public EmailService(JavaMailSender mailSender, EmailLogRepository repo) {
+        this.mailSender = mailSender;
         this.repo = repo;
-        this.defaultFrom = defaultFrom;
     }
 
     @Async
@@ -64,30 +57,24 @@ public class EmailService {
         } catch (Exception e) {
             log.setStatus(EmailStatus.FAILED);
             log.setErrorMessage(e.getMessage());
-            System.err.println("RESEND ERROR: " + e.getMessage());
         }
         log.setLastAttempt(LocalDateTime.now());
         repo.save(log);
     }
 
-    private void sendEmailInternal(EmailLog log, String from) {
-        String fromEmail = (from != null && !from.isBlank()) ? from : defaultFrom;
+    private void sendEmailInternal(EmailLog log, String from) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        CreateEmailOptions options = CreateEmailOptions.builder()
-                .from(fromEmail)
-                .to(log.getRecipient())
-                .subject(log.getSubject())
-                .html(log.getBody())
-                .build();
-
-        try {
-            CreateEmailResponse response = resend.emails().send(options);
-            if (response == null || response.getId() == null) {
-                throw new RuntimeException("Resend failed to return a valid message ID");
-            }
-        } catch (ResendException e) {
-            throw new RuntimeException(e);
+        if (from != null && !from.isBlank()) {
+            helper.setFrom(from);
+            helper.setReplyTo(from);
         }
+
+        helper.setTo(log.getRecipient());
+        helper.setSubject(log.getSubject());
+        helper.setText(log.getBody(), true);
+        mailSender.send(message);
     }
 
     @Async
@@ -121,7 +108,6 @@ public class EmailService {
         } catch (Exception e) {
             savedLog.setStatus(EmailStatus.FAILED);
             savedLog.setErrorMessage(e.getMessage());
-            System.err.println("RESEND ATTACHMENT ERROR: " + e.getMessage());
             throw new RuntimeException(e);
         } finally {
             savedLog.setLastAttempt(LocalDateTime.now());
@@ -129,30 +115,21 @@ public class EmailService {
         }
     }
 
-    private void sendEmailWithAttachmentsInternal(EmailLog log, Map<String, byte[]> attachments) {
-        List<Attachment> resendAttachments = new java.util.ArrayList<>();
+    private void sendEmailWithAttachmentsInternal(EmailLog log, Map<String, byte[]> attachments)
+            throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(log.getRecipient());
+        helper.setSubject(log.getSubject());
+        helper.setText(log.getBody(), true);
+
         for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
-            resendAttachments.add(Attachment.builder()
-                    .fileName(entry.getKey())
-                    .content(java.util.Base64.getEncoder().encodeToString(entry.getValue()))
-                    .build());
+            helper.addAttachment(
+                    entry.getKey(),
+                    new ByteArrayResource(entry.getValue()));
         }
 
-        CreateEmailOptions options = CreateEmailOptions.builder()
-                .from(defaultFrom)
-                .to(log.getRecipient())
-                .subject(log.getSubject())
-                .html(log.getBody())
-                .attachments(resendAttachments)
-                .build();
-
-        try {
-            CreateEmailResponse response = resend.emails().send(options);
-            if (response == null || response.getId() == null) {
-                throw new RuntimeException("Resend failed to return a valid message ID for attachments");
-            }
-        } catch (ResendException e) {
-            throw new RuntimeException(e);
-        }
+        mailSender.send(message);
     }
 }
