@@ -23,6 +23,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    out-of-order: true
+    validate-on-migrate: false
 
   mail:
     host: smtp.gmail.com
