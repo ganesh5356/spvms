@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.2</version>
+        <version>3.3.5</version>
         <relativePath/>
     </parent>
 
@@ -107,14 +107,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway</artifactId>
-            <version>3.4.2</version>
         </dependency>
 
         <!-- Flyway MySQL Support -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
-            <version>10.10.0</version>
         </dependency>
 
         <!-- MySQL Driver -->

@@ -5,6 +5,9 @@ WORKDIR /app
 # Copy the entire project
 COPY . .
 
+# Set memory limits for Maven to prevent Railway from killing the build
+ENV MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m"
+
 # Build the project (This will trigger frontend-maven-plugin automatically)
 RUN mvn clean package -DskipTests
 
