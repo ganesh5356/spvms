@@ -27,8 +27,8 @@ spring:
     validate-on-migrate: false
 
   mail:
-    host: smtp.gmail.com
-    port: 465
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
