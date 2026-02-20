@@ -3,26 +3,32 @@ package com.example.svmps.service;
 import com.example.svmps.entity.EmailLog;
 import com.example.svmps.entity.EmailStatus;
 import com.example.svmps.repository.EmailLogRepository;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
-import java.util.Map;
+import org.springframework.web.client.RestTemplate;
 
-import org.springframework.core.io.ByteArrayResource;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
     private final EmailLogRepository repo;
+    private final RestTemplate restTemplate;
 
-    public EmailService(JavaMailSender mailSender, EmailLogRepository repo) {
-        this.mailSender = mailSender;
+    @Value("${resend.api-key}")
+    private String resendApiKey;
+
+    @Value("${resend.from-email}")
+    private String fromEmail;
+
+    private static final String RESEND_API_URL = "https://api.resend.com/emails";
+
+    public EmailService(EmailLogRepository repo) {
         this.repo = repo;
+        this.restTemplate = new RestTemplate();
     }
 
     @Async
@@ -51,7 +57,7 @@ public class EmailService {
 
     private void processEmail(EmailLog log, String from) {
         try {
-            sendEmailInternal(log, from);
+            sendViaResend(log.getRecipient(), log.getSubject(), log.getBody(), null);
             log.setStatus(EmailStatus.SUCCESS);
             log.setErrorMessage(null);
         } catch (Exception e) {
@@ -60,21 +66,6 @@ public class EmailService {
         }
         log.setLastAttempt(LocalDateTime.now());
         repo.save(log);
-    }
-
-    private void sendEmailInternal(EmailLog log, String from) throws MessagingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        if (from != null && !from.isBlank()) {
-            helper.setFrom(from);
-            helper.setReplyTo(from);
-        }
-
-        helper.setTo(log.getRecipient());
-        helper.setSubject(log.getSubject());
-        helper.setText(log.getBody(), true);
-        mailSender.send(message);
     }
 
     @Async
@@ -102,7 +93,7 @@ public class EmailService {
         EmailLog savedLog = repo.save(log);
 
         try {
-            sendEmailWithAttachmentsInternal(savedLog, attachments);
+            sendViaResend(to, subject, body, attachments);
             savedLog.setStatus(EmailStatus.SUCCESS);
             savedLog.setErrorMessage(null);
         } catch (Exception e) {
@@ -115,21 +106,34 @@ public class EmailService {
         }
     }
 
-    private void sendEmailWithAttachmentsInternal(EmailLog log, Map<String, byte[]> attachments)
-            throws MessagingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    private void sendViaResend(String to, String subject, String htmlBody,
+            Map<String, byte[]> attachments) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(resendApiKey);
 
-        helper.setTo(log.getRecipient());
-        helper.setSubject(log.getSubject());
-        helper.setText(log.getBody(), true);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("from", fromEmail);
+        payload.put("to", List.of(to));
+        payload.put("subject", subject);
+        payload.put("html", htmlBody);
 
-        for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
-            helper.addAttachment(
-                    entry.getKey(),
-                    new ByteArrayResource(entry.getValue()));
+        if (attachments != null && !attachments.isEmpty()) {
+            List<Map<String, String>> attachmentList = new ArrayList<>();
+            for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
+                Map<String, String> att = new LinkedHashMap<>();
+                att.put("filename", entry.getKey());
+                att.put("content", Base64.getEncoder().encodeToString(entry.getValue()));
+                attachmentList.add(att);
+            }
+            payload.put("attachments", attachmentList);
         }
 
-        mailSender.send(message);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(RESEND_API_URL, request, String.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Resend API error: " + response.getStatusCode() + " - " + response.getBody());
+        }
     }
 }
