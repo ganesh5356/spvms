@@ -45,7 +45,7 @@ spring:
 # Root-level properties (0 indentation)
 app:
   reports:
-    email: ${REPORT_EMAIL}
+    email: ${REPORT_MAIL}
 
 springdoc:
   api-docs:
