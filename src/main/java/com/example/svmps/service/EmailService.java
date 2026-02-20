@@ -24,6 +24,13 @@ public class EmailService {
     @Value("${resend.from-email}")
     private String fromEmail;
 
+    // On Resend free plan (no verified domain), all emails must go to the account
+    // email.
+    // Set RESEND_TEST_RECIPIENT in Railway to override all recipients for demo
+    // purposes.
+    @Value("${resend.test-recipient:}")
+    private String testRecipientOverride;
+
     private static final String RESEND_API_URL = "https://api.resend.com/emails";
 
     public EmailService(EmailLogRepository repo) {
@@ -108,13 +115,19 @@ public class EmailService {
 
     private void sendViaResend(String to, String subject, String htmlBody,
             Map<String, byte[]> attachments) {
+        // Use override recipient if set (Resend free plan: can only send to account
+        // email)
+        String recipient = (testRecipientOverride != null && !testRecipientOverride.isBlank())
+                ? testRecipientOverride
+                : to;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(resendApiKey);
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("from", fromEmail);
-        payload.put("to", List.of(to));
+        payload.put("to", List.of(recipient));
         payload.put("subject", subject);
         payload.put("html", htmlBody);
 
